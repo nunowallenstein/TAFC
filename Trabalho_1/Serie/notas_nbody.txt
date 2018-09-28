@@ -1,0 +1,4 @@
+----------------------
+FICHEIRO SERIAL
+Compilar usando a opção -lm do gcc
+compilar usando a opção -Ofast ou -O3 do gcc
