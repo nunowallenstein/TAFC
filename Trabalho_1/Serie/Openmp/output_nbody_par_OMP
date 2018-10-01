@@ -1,3 +1,7 @@
+
+
+Physical specs - Intel(R) Core(TM) i3-3227U CPU @ 1.90GHz
+
 [Nuno@localhost Serie]$ gcc  nbody_par.c -o nbody_par -Ofast -lm -fopenmp
 [Nuno@localhost Serie]$ ./nbody_par 
 Initializing 16384 particles...
