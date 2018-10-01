@@ -80,7 +80,7 @@ void cleanup_particles(t_particles* const particles){
 }
 
 // Version 0
-void advance_particles(t_particles* const particles, const int n_part, const double dt) {
+double advance_particles(t_particles* const particles, const int n_part, const double dt) {
   // omp_set_num_threads(NUM_THREADS);
   // Restrict pointers
   double* restrict x  = particles -> x;
@@ -92,6 +92,8 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 
   // Advance velocities
 
+  double energy;
+   
   int i;
   double Fx, Fy, Fz;
 
@@ -99,6 +101,17 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
   //#pragma omp for reduction(+:vx[i],vy[i],vz[i],Fx,Fy,Fz) schedule (auto) 
 #pragma omp parallel
   {
+#pragma omp for reduction(+:energy) schedule (auto)
+  for(int i = 0; i < n_part; i++)
+    {
+    energy += particles->vx[i] * particles->vx[i] +
+      particles->vy[i] * particles->vy[i] +
+      particles->vz[i] * particles->vz[i];
+  }
+ return 0.5*energy;
+
+
+    
 #pragma omp for reduction(+:vx[:n_part],vy[:n_part],vz[:n_part],Fx,Fy,Fz) schedule (auto)
     
       //#pragma omp for reduction(+:Fx,Fy,Fz) schedule (auto)
@@ -142,7 +155,8 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 double kinetic_energy( t_particles* const particles, const int n_part ){
   double energy ;
 #pragma parallel for reduction(+:energy) schedule (auto)
-  for(int i = 0; i < n_part; i++) {
+  for(int i = 0; i < n_part; i++)
+    {
     energy += particles->vx[i] * particles->vx[i] +
       particles->vy[i] * particles->vy[i] +
       particles->vz[i] * particles->vz[i];
@@ -166,18 +180,19 @@ int main (int argc, const char * argv[])
   // Advance particles
   for( int i = 0; i < N_iter; i ++ )
     {
-#pragma omp parallel
+      /*#pragma omp parallel
       {
 #pragma omp single
 	{
-#pragma omp task
-	  printf("i = %3d, kin = %g\n", i, kinetic_energy( &particles, N ));
+	#pragma omp task*/
+	  printf("i = %3d, kin = %g\n", i, advance_particles( &particles, N, dt ));
 
-#pragma omp task
+	  /*#pragma omp task
 	  advance_particles( &particles, N, dt );
 	}
 	
       }
+	  */
     }
   const double stop = omp_get_wtime();
 

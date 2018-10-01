@@ -4,7 +4,7 @@
 #include <math.h>
 #include <omp.h>
 #include <sys/time.h>
-#define NUM_THREADS 2
+//#define NUM_THREADS 2
 
 
 
@@ -40,12 +40,15 @@ typedef struct {
  */
 void init_rand01( double* const buffer, const int size ) {
   const double r_rand_max = 1.0/RAND_MAX;
+
   for( int i = 0; i < size; i ++)
     buffer[i] = rand() * r_rand_max;
 }
 
-void init_particles(t_particles* const particles, const int n_part) {
-
+void init_particles(t_particles* const particles, const int n_part)
+{
+  printf("Initializing %d particles...\n", n_part );
+  
   particles -> x  = (double *) malloc( n_part * sizeof(double) );
   particles -> y  = (double *) malloc( n_part * sizeof(double) );
   particles -> z  = (double *) malloc( n_part * sizeof(double) );
@@ -53,7 +56,7 @@ void init_particles(t_particles* const particles, const int n_part) {
   particles -> vy = (double *) malloc( n_part * sizeof(double) );
   particles -> vz = (double *) malloc( n_part * sizeof(double) );
 
-  printf("Initializing %d particles...\n", n_part );
+  
 
   srand(0);
   init_rand01( particles ->  x, n_part );
@@ -62,6 +65,7 @@ void init_particles(t_particles* const particles, const int n_part) {
   init_rand01( particles -> vx, n_part );
   init_rand01( particles -> vy, n_part );
   init_rand01( particles -> vz, n_part );
+ 
 
   printf("Initialization complete.\n");
 }
@@ -76,7 +80,7 @@ void cleanup_particles(t_particles* const particles){
 }
 
 // Version 0
-void advance_particles(t_particles* const particles, const int n_part, const double dt) {
+double advance_particles(t_particles* const particles, const int n_part, const double dt) {
   // omp_set_num_threads(NUM_THREADS);
   // Restrict pointers
   double* restrict x  = particles -> x;
@@ -88,42 +92,47 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 
   // Advance velocities
 
+  double energy;
+   
   int i;
   double Fx, Fy, Fz;
- 
+
 
   //#pragma omp for reduction(+:vx[i],vy[i],vz[i],Fx,Fy,Fz) schedule (auto) 
 #pragma omp parallel
   {
-#pragma omp for reduction(+:vx[:n_part],vy[:n_part],vz[:n_part],Fx,Fy,Fz) schedule (auto)	
-  for( int i = 0; i < n_part; i++)
-    {
-      Fx=Fy=Fz=0;	
+    
+#pragma omp for reduction(+:vx[:n_part],vy[:n_part],vz[:n_part],Fx,Fy,Fz) schedule (auto)
+    
+      //#pragma omp for reduction(+:Fx,Fy,Fz) schedule (auto)
+      for( int i = 0; i < n_part; i++)
+	{
+	  Fx=Fy=Fz=0;	
 
-      //#pragma omp for reduction(+:Fx,Fy,Fz) schedule (auto)	
-	for( int j = 0; j < n_part; j++)
-	  {
-	    const double dx = x[j] - x[i];
-	    const double dy = y[j] - y[i];
-	    const double dz = z[j] - z[i];
+	  //#pragma omp for reduction(+:Fx,Fy,Fz) schedule (auto)	
+	  for( int j = 0; j < n_part; j++)
+	    {
+	      const double dx = x[j] - x[i];
+	      const double dy = y[j] - y[i];
+	      const double dz = z[j] - z[i];
 
-	    // The softening (soft) value avoids a division by zero
-	    // if two particles happen to have the same position
-	    const double dr2 = dx*dx + dy*dy + dz*dz + soft;
-	    const double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
+	      // The softening (soft) value avoids a division by zero
+	      // if two particles happen to have the same position
+	      const double dr2 = dx*dx + dy*dy + dz*dz + soft;
+	      const double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
 
-	    Fx += dx * r_dr3;
-	    Fy += dy * r_dr3;
-	    Fz += dz * r_dr3;
-	  }
+	      Fx += dx * r_dr3;
+	      Fy += dy * r_dr3;
+	      Fz += dz * r_dr3;
+	    }
          
-      // Since m = 1, F = a
-      vx[i] += Fx * dt;
-      vy[i] += Fy * dt;
-      vz[i] += Fz * dt;
-    };
-  }	
-
+	  // Since m = 1, F = a
+	  vx[i] += Fx * dt;
+	  vy[i] += Fy * dt;
+	  vz[i] += Fz * dt;
+	};
+    }
+  
   // Advance positions
 #pragma parallel for reduction(+:x[:n_part],y[:n_part],z[:n_part]) schedule (auto)
   for( int i = 0; i < n_part; i++){
@@ -134,10 +143,10 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 }
 
 double kinetic_energy( t_particles* const particles, const int n_part ){
-  omp_set_num_threads(NUM_THREADS);
   double energy ;
 #pragma parallel for reduction(+:energy) schedule (auto)
-  for(int i = 0; i < n_part; i++) {
+  for(int i = 0; i < n_part; i++)
+    {
     energy += particles->vx[i] * particles->vx[i] +
       particles->vy[i] * particles->vy[i] +
       particles->vz[i] * particles->vz[i];
@@ -146,8 +155,9 @@ double kinetic_energy( t_particles* const particles, const int n_part ){
   return 0.5*energy;
 }
 
-int main (int argc, const char * argv[]) {
-  omp_set_num_threads(NUM_THREADS);
+int main (int argc, const char * argv[])
+{
+  //omp_set_num_threads(NUM_THREADS);
   omp_set_nested(1);
   t_particles particles;
 
@@ -160,11 +170,19 @@ int main (int argc, const char * argv[]) {
   // Advance particles
   for( int i = 0; i < N_iter; i ++ )
     {
-      printf("i = %3d, kin = %g\n", i, kinetic_energy( &particles, N ));
-      advance_particles( &particles, N, dt );
-      
-    }
+      #pragma omp parallel
+      {
+#pragma omp single
+	{
+	#pragma omp task
+	  printf("i = %3d, kin = %g\n", i, kinetic_energy( &particles, N ));
 
+	  #pragma omp task
+	  advance_particles( &particles, N, dt );
+	}
+	
+      }
+    }
   const double stop = omp_get_wtime();
 
   // Print execution time
@@ -172,6 +190,6 @@ int main (int argc, const char * argv[]) {
   printf("Total iterations = %d\n", N_iter );
   printf("Final kinetic energy: %g\n", kinetic_energy(&particles, N));
   printf("Total execution time: %g s\n", stop - start);
-
+  //  printf("Número de Threads %i\n", omp_get_num_threads()); 
   cleanup_particles(&particles);
 }
