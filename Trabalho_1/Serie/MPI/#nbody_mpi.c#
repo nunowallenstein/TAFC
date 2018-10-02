@@ -120,10 +120,10 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 	};
 }
 
-double kinetic_energy( t_particles* const particles, const int n_part ){
-	double energy = 0;
+double kinetic_energy( t_particles* const particles, const int n_part,int nproc_per_proc){
+	double energy = 0;		
 	for(int i = 0; i < n_part; i++) {
-		energy += particles->vx[i] * particles->vx[i] +
+		energy_A += particles->vx[i] * particles->vx[i] +
 		          particles->vy[i] * particles->vy[i] +
 		          particles->vz[i] * particles->vz[i];
 	}
@@ -133,10 +133,11 @@ double kinetic_energy( t_particles* const particles, const int n_part ){
 
 int main (int argc, const char * argv[]) {
   int world_size,world_rank;
+ 
   MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  
+    int nproc_per_proc=N/world_size; 
   
 	t_particles particles;
 

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <omp.h>
 #include <sys/time.h>
-//#define NUM_THREADS 2
+#define NUM_THREADS 2
 
 
 
@@ -38,9 +38,10 @@ typedef struct {
  * @param buffer [description]
  * @param size   [description]
  */
-void init_rand01( double* const buffer, const int size ) {
-  const double r_rand_max = 1.0/RAND_MAX;
+void init_rand01( double* const buffer, const int size )
 
+{
+  const double r_rand_max = 1.0/RAND_MAX;
   for( int i = 0; i < size; i ++)
     buffer[i] = rand() * r_rand_max;
 }
@@ -80,7 +81,7 @@ void cleanup_particles(t_particles* const particles){
 }
 
 // Version 0
-double advance_particles(t_particles* const particles, const int n_part, const double dt) {
+void advance_particles(t_particles* const particles, const int n_part, const double dt) {
   // omp_set_num_threads(NUM_THREADS);
   // Restrict pointers
   double* restrict x  = particles -> x;
@@ -157,7 +158,7 @@ double kinetic_energy( t_particles* const particles, const int n_part ){
 
 int main (int argc, const char * argv[])
 {
-  //omp_set_num_threads(NUM_THREADS);
+  omp_set_num_threads(NUM_THREADS);
   omp_set_nested(1);
   t_particles particles;
 
@@ -170,18 +171,11 @@ int main (int argc, const char * argv[])
   // Advance particles
   for( int i = 0; i < N_iter; i ++ )
     {
-      #pragma omp parallel
-      {
-#pragma omp single
-	{
-	#pragma omp task
 	  printf("i = %3d, kin = %g\n", i, kinetic_energy( &particles, N ));
 
-	  #pragma omp task
+
 	  advance_particles( &particles, N, dt );
-	}
-	
-      }
+
     }
   const double stop = omp_get_wtime();
 
