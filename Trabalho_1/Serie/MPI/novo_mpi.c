@@ -91,11 +91,6 @@ int main(int argc, char *argv[])
   MPI_Comm_rank(MPI_COMM_WORLD,&world_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&world_size);
 
- printf("1-Processo %d\n",world_rank);
-  printf("%f\n",param[0][2]);
-  printf("%f\n",param[2][10000]);
-  printf("%f\n",param[4][500]);
-    printf("---------------------");
 
   if(world_rank==0)
     {
@@ -106,21 +101,18 @@ int main(int argc, char *argv[])
       printf("Initialization complete.\n");
     }
 
-   printf("2-Processo %d\n",world_rank);
-  printf("%f\n",param[0][2]);
-  printf("%f\n",param[2][10000]);
-  printf("%f\n",param[4][500]);
- printf("---------------------");
-    
-  MPI_Bcast(&(param[0][0]), 6*N, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-  
+    
+  MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  if(world_rank==2)
+    {
   printf("3-Processo %d\n",world_rank);
   printf("%f\n",param[0][2]);
   printf("%f\n",param[2][10000]);
   printf("%f\n",param[4][500]);
  printf("---------------------");
-
+    }
 
      /* free(param[0]);
   free(param);
