@@ -1,12 +1,4 @@
-//Este programa é parecido ao original, só que em vez de uma estrutura, está organizado sobre um array de arrays chamado param que nos da acesso a todas as quantidades físicas do sistema
-/*
-param[0][N]=x da particula N
-param[1][N]=y da particula N
-param[2][N]=z da particula N
-param[3][N]=vx da particula N
-param[4][N]=vy da particula N
-param[5][N]=vz da particula N
-*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -39,75 +31,101 @@ double get_wtime() {
 }
 
 
-void init_rand01( double* const buffer, const int size ) {
-  const double r_rand_max = 1.0/RAND_MAX;
-   
+void init_rand01( double*  buffer, const int size ) {
+  const double r_rand_max = 1.0/RAND_MAX;  
   for( int i = 0; i < size; i ++)
     buffer[i] = rand() * r_rand_max;
 }
 
 
 
-
+/*
 
 int free2ddouble(double ***array) {
-    /* free the memory - the first element of the array is at the start */
+    // free the memory - the first element of the array is at the start 
     free(&((*array)[0][0]));
 
-    /* free the pointers into the memory */
+     free the pointers into the memory 
     free(*array);
 
     return 0;
 }
+*/
 
+
+
+double **alloc_2d_init(int rows, int cols) {
+    double *data = (double *)malloc(rows*cols*sizeof(double));
+    double **array= (double **)malloc(rows*sizeof(double*));
+    for (int i=0; i<rows; i++)
+        array[i] = &(data[cols*i]);
+
+    return array;
+}
+/*
 int malloc2ddouble(double ***array, int n, int m) {
 
-    /* allocate the n*m contiguous items */
+     allocate the n*m contiguous items 
     double *p = (double *)malloc(n*m*sizeof(double));
     if (!p) return -1;
 
-    /* allocate the row pointers into the memory */
+     allocate the row pointers into the memory 
     (*array) = (double **)malloc(n*sizeof(double*));
     if (!(*array)) {
        free(p);
        return -1;
     }
 }
-
-
+*/
 int main(int argc, char *argv[])
 {
 
   int world_rank,world_size;
-  double param[6][N];
-
+  double **param;
+  double y=2;
  
-  
+
+   
+  param=alloc_2d_init(6,N);
   MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD,&world_rank);
   MPI_Comm_size(MPI_COMM_WORLD,&world_size);
+
+ printf("1-Processo %d\n",world_rank);
+  printf("%f\n",param[0][2]);
+  printf("%f\n",param[2][10000]);
+  printf("%f\n",param[4][500]);
+    printf("---------------------");
+
   if(world_rank==0)
     {
       printf("Initializing %d particles...\n", N );
-      for (int i=0;i++;i<6)
-	{
-	  init_rand01(param[i],N);
-	}
+      srand(0);
+       for(int i=0;i<6;i++)
+       init_rand01(param[i],N);	
       printf("Initialization complete.\n");
-      MPI_Bcast(&(param[0][0]),6*N,MPI_DOUBLE,0,MPI_COMM_WORLD);
- 
     }
 
+   printf("2-Processo %d\n",world_rank);
+  printf("%f\n",param[0][2]);
+  printf("%f\n",param[2][10000]);
+  printf("%f\n",param[4][500]);
+ printf("---------------------");
+    
+  MPI_Bcast(&(param[0][0]), 6*N, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
   
+  printf("3-Processo %d\n",world_rank);
+  printf("%f\n",param[0][2]);
+  printf("%f\n",param[2][10000]);
+  printf("%f\n",param[4][500]);
+ printf("---------------------");
 
 
-  // freeArray(param,6);
-
-  // free2ddouble(&param);
+     /* free(param[0]);
+  free(param);
+     */
    MPI_Finalize();
-   // for(int i=0; i++;i<N)
-    // free(param[i]);
-    // free(param);
- 
+
   return 0;
 }
