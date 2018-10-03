@@ -62,34 +62,34 @@ double **alloc_2d_init(int rows, int cols) {
 
     return array;
 }
-/*
-int malloc2ddouble(double ***array, int n, int m) {
 
-     allocate the n*m contiguous items 
-    double *p = (double *)malloc(n*m*sizeof(double));
-    if (!p) return -1;
+double kinetic_energy_local(double  **param, int N_particles, int world_rank,int n_proc)
+{
+  int i,my_first,my_last;
+  double energy_local=0;
+ 
+  my_first =(world_rank)*N_particles/n_proc;
+  my_last=(world_rank +1)*N_particles/n_proc;
+  for(i=my_first;i<my_last;i++)
+  energy_local=energy_local +param[3][i]*param[3][i]+param[4][i]*param[4][i]+param[5][i]*param[5][i];
 
-     allocate the row pointers into the memory 
-    (*array) = (double **)malloc(n*sizeof(double*));
-    if (!(*array)) {
-       free(p);
-       return -1;
-    }
+  return 0.5*energy_local;
 }
-*/
+ 
+    
+
 int main(int argc, char *argv[])
 {
 
-  int world_rank,world_size;
+  int world_rank,world_size,err;
   double **param;
-  double y=2;
- 
-
+  double energy,energy_local=0;
+  
    
   param=alloc_2d_init(6,N);
-  MPI_Init(&argc,&argv);
-  MPI_Comm_rank(MPI_COMM_WORLD,&world_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&world_size);
+ err= MPI_Init(&argc,&argv);
+ err= MPI_Comm_rank(MPI_COMM_WORLD,&world_rank);
+ err= MPI_Comm_size(MPI_COMM_WORLD,&world_size);
 
 
   if(world_rank==0)
@@ -100,24 +100,16 @@ int main(int argc, char *argv[])
        init_rand01(param[i],N);	
       printf("Initialization complete.\n");
     }
+ MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+ 
+ energy_local=kinetic_energy_local(param,N,world_rank,world_size);
+  
+ err=MPI_Allreduce(&energy_local,&energy,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+ printf("energy %f\n",energy);
 
-
-    
-  MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-  if(world_rank==2)
-    {
-  printf("3-Processo %d\n",world_rank);
-  printf("%f\n",param[0][2]);
-  printf("%f\n",param[2][10000]);
-  printf("%f\n",param[4][500]);
- printf("---------------------");
-    }
-
-     /* free(param[0]);
-  free(param);
-     */
-   MPI_Finalize();
+ free(param[0]);
+ free(param);
+  MPI_Finalize();
 
   return 0;
 }

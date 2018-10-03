@@ -2,7 +2,7 @@ Physical Specs - Intel(R) Core(TM) i3-3227U CPU @ 1.90GHz
 ------------------------------------------------
 
 [Nuno@localhost Serie]$ gcc nbody.c -o nbody -lm -Ofast
-[Nuno@localhost Serie]$ ./nbody
+[Nuno@localhost Serie]$ ./nbody 
 Initializing 16384 particles...
 Initialization complete.
 i =   0, kin = 8231.49
@@ -108,5 +108,5 @@ i =  99, kin = 8.41298e+09
 ---
 Total iterations = 100
 Final kinetic energy: 8.41296e+09
-Total execution time: 201.124 s
+Total execution time: 200.872 s
 

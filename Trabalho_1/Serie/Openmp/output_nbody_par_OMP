@@ -2,8 +2,10 @@
 
 Physical specs - Intel(R) Core(TM) i3-3227U CPU @ 1.90GHz
 
-[Nuno@localhost Serie]$ gcc  nbody_par.c -o nbody_par -Ofast -lm -fopenmp
-[Nuno@localhost Serie]$ ./nbody_par 
+
+Com 4 threads
+[Nuno@localhost Openmp]$ gcc nbody_par.c -o nbody_par -fopenmp -lm -Ofast
+[Nuno@localhost Openmp]$ ./nbody_par
 Initializing 16384 particles...
 Initialization complete.
 i =   0, kin = 8231.49
@@ -29,7 +31,7 @@ i =  19, kin = 8.42282e+09
 i =  20, kin = 8.42207e+09
 i =  21, kin = 8.42141e+09
 i =  22, kin = 8.42082e+09
-i =  23, kin = 8.42033e+09
+i =  23, kin = 8.42032e+09
 i =  24, kin = 8.41986e+09
 i =  25, kin = 8.41943e+09
 i =  26, kin = 8.41905e+09
@@ -54,7 +56,7 @@ i =  44, kin = 8.41547e+09
 i =  45, kin = 8.41536e+09
 i =  46, kin = 8.41526e+09
 i =  47, kin = 8.41517e+09
-i =  48, kin = 8.41508e+09
+i =  48, kin = 8.41507e+09
 i =  49, kin = 8.41499e+09
 i =  50, kin = 8.4149e+09
 i =  51, kin = 8.41482e+09
@@ -71,18 +73,18 @@ i =  61, kin = 8.41418e+09
 i =  62, kin = 8.41413e+09
 i =  63, kin = 8.41408e+09
 i =  64, kin = 8.41403e+09
-i =  65, kin = 8.41399e+09
+i =  65, kin = 8.41398e+09
 i =  66, kin = 8.41394e+09
 i =  67, kin = 8.4139e+09
 i =  68, kin = 8.41385e+09
 i =  69, kin = 8.41381e+09
 i =  70, kin = 8.41377e+09
 i =  71, kin = 8.41373e+09
-i =  72, kin = 8.4137e+09
+i =  72, kin = 8.41369e+09
 i =  73, kin = 8.41366e+09
 i =  74, kin = 8.41362e+09
 i =  75, kin = 8.41359e+09
-i =  76, kin = 8.41356e+09
+i =  76, kin = 8.41355e+09
 i =  77, kin = 8.41352e+09
 i =  78, kin = 8.41349e+09
 i =  79, kin = 8.41346e+09
@@ -94,10 +96,10 @@ i =  84, kin = 8.41332e+09
 i =  85, kin = 8.41329e+09
 i =  86, kin = 8.41326e+09
 i =  87, kin = 8.41324e+09
-i =  88, kin = 8.41322e+09
+i =  88, kin = 8.41321e+09
 i =  89, kin = 8.41319e+09
 i =  90, kin = 8.41317e+09
-i =  91, kin = 8.41315e+09
+i =  91, kin = 8.41314e+09
 i =  92, kin = 8.41312e+09
 i =  93, kin = 8.4131e+09
 i =  94, kin = 8.41308e+09
@@ -109,5 +111,6 @@ i =  99, kin = 8.41298e+09
 ---
 Total iterations = 100
 Final kinetic energy: 8.41296e+09
-Total execution time: 107.726 s
+Total execution time: 101.168 s
+
 

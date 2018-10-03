@@ -186,6 +186,5 @@ int main (int argc, const char * argv[])
   printf("Total iterations = %d\n", N_iter );
   printf("Final kinetic energy: %g\n", kinetic_energy(&particles, N));
   printf("Total execution time: %g s\n", stop - start);
-  printf("Número de Threads %i\n", omp_get_num_threads()); 
   cleanup_particles(&particles);
 }
