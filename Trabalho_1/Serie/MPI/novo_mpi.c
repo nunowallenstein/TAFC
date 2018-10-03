@@ -68,9 +68,6 @@ void advance_particles(double **param,const int N_particles,const double dt,int 
   my_first =(world_rank)*N_particles/world_size;
   my_last=(world_rank +1)*N_particles/world_size;
 
-    
-  
-  
 
   for(int i =0;i<N_particles;i++)
     {
@@ -84,13 +81,12 @@ void advance_particles(double **param,const int N_particles,const double dt,int 
 	  double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
 	  Fx+=dx*r_dr3;
 	  Fy+=dy*r_dr3;
-	  Fz+=dz*r_dr3;
-	  
+	  Fz+=dz*r_dr3;	  
 	}
-        MPI_Allreduce(&Fx,&Fx_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-       MPI_Allreduce(&Fy,&Fy_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-       MPI_Allreduce(&Fz,&Fz_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-       MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Allreduce(&Fx,&Fx_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(&Fy,&Fy_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+      MPI_Allreduce(&Fz,&Fz_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+   
  
       
       vx[i] += Fx_tot * dt;
@@ -100,19 +96,29 @@ void advance_particles(double **param,const int N_particles,const double dt,int 
     }
 
   
-  for( int i =my_first ; i < my_last; i++)
+  // for( int i =my_first ; i < my_last; i++)
+    for( int i =0 ; i < N_particles; i++)
     {
       x[i] += vx[i] * dt;
       y[i] += vy[i] * dt;
       z[i] += vz[i] * dt;
     }
-
-  MPI_Allreduce(&(x[0]),&(param[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    /*
+  MPI_Allreduce(&(x[0]),&(x_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   MPI_Allreduce(&(y[0]),&(y_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   MPI_Allreduce(&(z[0]),&(z_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  
+    */
  
- 
+    /* param[0]=x_total;
+  param[1]=y_total;
+  param[2]=z_total;
+    */
+param[0]=x;
+  param[1]=y;
+  param[2]=z;
+  param[3]=vx;
+  param[4]=vy;
+  param[5]=vz;
   
 
 }
@@ -170,14 +176,13 @@ int main(int argc, char *argv[])
 
   for (int i=0;i<N_iter;i++)
     {
-  energy=kinetic_energy_local(param,N,world_rank,world_size);
+      energy=kinetic_energy_local(param,N,world_rank,world_size);
  
   
-  err=MPI_Allreduce(&energy,&energy_total,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-
-  if (world_rank==0)
-  printf("iteração:%d energia cinética:%f\n",i,energy_total);
-  advance_particles(param,N,dt,world_rank,world_size);
+      err=MPI_Allreduce(&energy,&energy_total,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);;
+      advance_particles(param,N,dt,world_rank,world_size);
+      if(world_rank==0)
+            printf("i = %3d, kin = %g\n", i, energy_total);
     }
 
   free(param[0]);
