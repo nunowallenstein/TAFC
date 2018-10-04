@@ -111,15 +111,7 @@ int main(int argc, char *argv[])
       int my_first,my_last;
       int num_elem_proc;
       int indexA;
-      /* double *xaux,*yaux,*zaux;
-      double *vxaux,*vyaux,*vzaux;
-      xaux=param[0];
-      yaux=param[1];
-      zaux=param[2];
-      vxaux=param[3];
-      vyaux=param[4];
-      vzaux=param[5];
-      */
+    
       int N_particles=N;
       my_first =(world_rank)*N_particles/world_size;
       my_last=(world_rank +1)*N_particles/world_size;
