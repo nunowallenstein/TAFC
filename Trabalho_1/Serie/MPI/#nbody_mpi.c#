@@ -17,28 +17,28 @@
 
 
 // Number of particles
-//static const int N = 16384;
+static const int N = 16384;
 
-static const int N = 3;
+//static const int N = 100;
 
 
 
 //static const int N = 10;
 
-// Number of iterations
+ // Number of iterations 
 static const int N_iter = 100;
 
-// Timestep
-static const double dt = 0.001;
+ // Timestep 
+ static const double dt = 0.001; 
 
-// Softening factor
-static const double soft = 1e-40;
+ // Softening factor 
+ static const double soft = 1e-40; 
 
-// Timing routine based on gettimeofday
-double get_wtime() {
-  struct timeval tp;
-  gettimeofday( &tp, NULL );
-  return 1.0e-6 * tp.tv_usec + tp.tv_sec;
+/* // Timing routine based on gettimeofday */
+double get_wtime() { 
+struct timeval tp;
+gettimeofday( &tp, NULL );
+return 1.0e-6 * tp.tv_usec + tp.tv_sec;
 }
 
 
@@ -48,172 +48,7 @@ void init_rand01( double*  buffer, const int size ) {
     buffer[i] = rand() * r_rand_max;
 }
 
-//-------------------------------------------------------------------------------
 
-void advance_particles(double **param,const int N_particles,const double dt,int world_rank, int world_size)
-{
-  //for(int i=0;i<N;i++)
-    //  printf("%g----ANTES----%d\n",param[0][i],world_rank);
-    
-
-  // double *x,*y,*z,*vx,*vy,*vz,
-    double Fx,Fy,Fz,Fx_tot,Fy_tot,Fz_tot;
-    double tmpvx,tmpvy,tmpvz;
-  double tmpx,tmpy,tmpz;
-
-  int my_first,my_last;
-  /*
-  x=param[0];
-  y=param[1];
-  z=param[2];
-  vx=param[3];
-  vy=param[4];
-  vz=param[5];
-  */
-
-
-  /* double *x_total=calloc(N_particles,sizeof(double));
-  double *y_total=calloc(N_particles,sizeof(double));
-  double *z_total=calloc(N_particles,sizeof(double));
- double *vx_total=calloc(N_particles,sizeof(double));
-  double *vy_total=calloc(N_particles,sizeof(double));
-  double *vz_total=calloc(N_particles,sizeof(double));
-  */
-
-  my_first =(world_rank)*N_particles/world_size;
-  my_last=(world_rank +1)*N_particles/world_size;
-
-
-  for(int i =my_first;i<my_last;i++)
-    {
-      Fx=Fy=Fz=0;
-      // MPI_Barrier(MPI_COMM_WORLD);
-      for(int j =0;j<N_particles;j++)
-	{
-	  double dx=param[0][j]-param[0][i];
-	  double dy=param[1][j]-param[1][i];
-	  double dz=param[2][j]-param[2][i];
-	  double dr2 = dx*dx + dy*dy + dz*dz + soft;
-	  double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
-	  Fx+=dx*r_dr3;
-	  Fy+=dy*r_dr3;
-	  Fz+=dz*r_dr3;	  
-	}
-      /*
-      MPI_Allreduce(&Fx,&Fx_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-      MPI_Allreduce(&Fy,&Fy_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-      MPI_Allreduce(&Fz,&Fz_tot,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-      */
-
-      // MPI_Barrier(MPI_COMM_WORLD);
-         param[3][i]=param[3][i]+ Fx * dt;
-      param[4][i]= param[4][i]+ Fy * dt;
-       param[5][i]=param[5][i]+ Fz * dt;
-      
-    
-       
-      /*  MPI_Bcast(&param[3][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[4][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[5][i],1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
-      */
-
-      // printf("teste");
-    }
-
-
-  
-
-  //  MPI_Barrier(MPI_COMM_WORLD);
-  
-  // double *x_1=calloc(my_last-my_first,sizeof(double));
-  // double *y_1=calloc(my_last-my_first,sizeof(double));
-  // double *z_1=calloc(my_last-my_first,sizeof(double));
-   
-  // MPI_Scatter(x,my_last - my_first,MPI_DOUBLE,x_1,my_last - my_first,MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-  /*
-  //for( int i =0 ; i < N_particles; i++)
-  double **x_1=calloc(world_size,sizeof(double *));
-  double **y_1=calloc(world_size,sizeof(double *));
-  double **z_1=calloc(world_size,sizeof(double *));
-    
-  for( int i =0 ; i < world_size; i++)
-    {
-       x_1[i]=calloc(my_last-my_first,sizeof(double));
-       y_1[i]=calloc(my_last-my_first,sizeof(double));
-       z_1[i]=calloc(my_last-my_first,sizeof(double));
-
-    
-    }
-  */
-
-
-           printf("-----------\n");    
-   for(int i=0;i<N_particles;i++)
-     {
-     printf("%g-----DEPOIS-----%d\n",param[0][i],world_rank);
-     }
-    
- MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  
-  for( int i =my_first; i<my_last; i++)   
-    {
- tmpx=param[0][i];
-       tmpy=param[1][i];
-       tmpz=param[2][i];
-       
-      param[0][i]=tmpx + param[3][i]*dt;
-      param[1][i]=tmpy+ param[4][i] * dt;
-      param[2][i] =tmpz+ param[5][i]* dt;
-
-      /*      
-	 MPI_Bcast(&param[0][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[1][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[2][i],1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
-      */
-    }
-
-  /*  MPI_Allreduce(&(param[0]),&(x_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-   MPI_Allreduce(&(param[1]),&(y_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-   MPI_Allreduce(&(param[2]),&(z_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  */
-
-   
-      /*  x_1[world_rank][i] =x[i+world_rank*(my_last-my_first)]+ vx[i+world_rank*(my_last-my_first)] * dt;
-      y_1[world_rank][i] =y[i+world_rank*(my_last-my_first)]+ vy[i+world_rank*(my_last-my_first)] * dt;
-      z_1[world_rank][i] =z[i+world_rank*(my_last-my_first)]+ vz[i+world_rank*(my_last-my_first)] * dt;
-      */
-    
-      /*	
-	 MPI_Bcast(&param[0][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[1][i], 1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);
- MPI_Bcast(&param[2][i],1, MPI_DOUBLE, world_rank, MPI_COMM_WORLD);*/
-       
-  //  MPI_Allgather(&x_1,my_last-my_first,MPI_DOUBLE,x,N_particles,MPI_DOUBLE,MPI_COMM_WORLD);
-
-
-  //for(int i=0;i<N;i++)
-  // printf("%g----ANTES----%d\n",param[0][i],world_rank);
-       
-   
-  //  MPI_Allreduce(&(x[0]),&(x_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  // MPI_Allreduce(&(y[0]),&(y_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  // MPI_Allreduce(&(z[0]),&(z_total[0]),N_particles,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  
- 
-  // param[0]=x_total;
-  // param[1]=y_total;
-  // param[2]=z_total;
-
-   
-  
-       //  printf("-----------\n");
-    
-  // for(int i=0;i<N;i++)
-    // printf("%g-----DEPOIS-----%d\n",param[0][i],world_rank);
-}
-
-//-----------------------------------------------------------------------------------------------------
 
 double **alloc_2d_init(int rows, int cols) {
   double *data = (double *)malloc(rows*cols*sizeof(double));
@@ -261,30 +96,85 @@ int main(int argc, char *argv[])
 	init_rand01(param[i],N);	
       printf("Initialization complete.\n");
     }
-  start=MPI_Wtime();
   MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+  start=MPI_Wtime();
 
   for (int i=0;i<N_iter;i++)
     {
       energy=kinetic_energy(param,N,world_rank,world_size);
       MPI_Allreduce(&energy,&energy_total,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-       if(world_rank==0)
+      if(world_rank==0)
       	printf("i = %3d, kin = %g\n", i,energy_total );
+      // advance_particles(param,N,dt,world_rank,world_size);
 
+      double Fx,Fy,Fz,Fx_tot,Fy_tot,Fz_tot;
+      int my_first,my_last;
+      int num_elem_proc;
+      int indexA;
+    
+      int N_particles=N;
+      my_first =(world_rank)*N_particles/world_size;
+      my_last=(world_rank +1)*N_particles/world_size;
+      num_elem_proc=N_particles/world_size;
+      indexA=world_rank*num_elem_proc; 
 
-       advance_particles(param,N,dt,world_rank,world_size);
+      for(int i =0;i<num_elem_proc;i++)
+	{
+	  int iA=i+indexA;
+	      	Fx=Fy=Fz=0;
+	  for(int j =0;j<N_particles;j++)
+	    {
+	      double dx=param[0][j]-param[0][iA];
+	      double dy=param[1][j]-param[1][iA];
+	      double dz=param[2][j]-param[2][iA];
+	      double dr2 = dx*dx + dy*dy + dz*dz + soft;
+	      double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
+	      Fx+=dx*r_dr3;
+	      Fy+=dy*r_dr3;
+	      Fz+=dz*r_dr3;
+	  
+	    }
+
+	  param[3][iA]=param[3][iA]+Fx*dt;
+	  param[4][iA]=param[4][iA]+Fy*dt;
+	  param[5][iA]=param[5][iA]+Fz*dt;
+	 
+	}
+   
+  
+    
+      for( int i =0; i < num_elem_proc;i++)
+	{
+	  int iA=i+indexA;
+	  param[0][iA]=param[0][iA]+param[3][iA]*dt;
+	  param[1][iA]=param[1][iA]+param[4][iA]*dt;
+	  param[2][iA]=param[2][iA]+param[5][iA]*dt;
+	  
+	}
+      
+      	for (int i=0;i<world_size;i++)
+	{
+	  int a=i*num_elem_proc;
+	MPI_Bcast(&(param[0][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+        MPI_Bcast(&(param[1][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[2][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[3][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+        MPI_Bcast(&(param[4][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[5][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+      
+	}
+	
     }
 	  
   stop=MPI_Wtime();
-   energy=kinetic_energy(param, N,world_rank,world_size);
+  energy=kinetic_energy(param, N,world_rank,world_size);
   MPI_Allreduce(&energy,&energy_total,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if(world_rank==0)
     {
-   printf("---\n");
-   printf("Total iterations = %d\n", N_iter );
+      printf("---\n");
+      printf("Total iterations = %d\n", N_iter );
       printf("Final kinetic energy: %g\n",energy_total );
-   printf("Total execution time: %g s\n", stop - start);
+      printf("Total execution time: %g s\n", stop - start);
     }
   free(param[0]);
   free(param);

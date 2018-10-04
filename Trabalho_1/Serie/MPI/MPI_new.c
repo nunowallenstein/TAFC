@@ -25,20 +25,20 @@ static const int N = 16384;
 
 //static const int N = 10;
 
-// Number of iterations
+ // Number of iterations 
 static const int N_iter = 100;
 
-// Timestep
-static const double dt = 0.001;
+ // Timestep 
+ static const double dt = 0.001; 
 
-// Softening factor
-static const double soft = 1e-40;
+ // Softening factor 
+ static const double soft = 1e-40; 
 
-// Timing routine based on gettimeofday
-double get_wtime() {
-  struct timeval tp;
-  gettimeofday( &tp, NULL );
-  return 1.0e-6 * tp.tv_usec + tp.tv_sec;
+/* // Timing routine based on gettimeofday */
+double get_wtime() { 
+struct timeval tp;
+gettimeofday( &tp, NULL );
+return 1.0e-6 * tp.tv_usec + tp.tv_sec;
 }
 
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
       printf("Initialization complete.\n");
     }
   MPI_Bcast(&(param[0][0]), 6*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    start=MPI_Wtime();
+  start=MPI_Wtime();
 
   for (int i=0;i<N_iter;i++)
     {
@@ -110,87 +110,71 @@ int main(int argc, char *argv[])
       	printf("i = %3d, kin = %g\n", i,energy_total );
       // advance_particles(param,N,dt,world_rank,world_size);
 
-  double Fx,Fy,Fz,Fx_tot,Fy_tot,Fz_tot;
-  int my_first,my_last;
-  int num_elem_proc;
-int indexA;
- double *xaux,*yaux,*zaux;
-  double *vxaux,*vyaux,*vzaux;
-  xaux=param[0];
-  yaux=param[1];
-  zaux=param[2];
-  vxaux=param[3];
-  vyaux=param[4];
-  vzaux=param[5];
-  int N_particles=N;
-  my_first =(world_rank)*N_particles/world_size;
-  my_last=(world_rank +1)*N_particles/world_size;
-  num_elem_proc=N_particles/world_size;
-  indexA=world_rank*num_elem_proc; 
+      double Fx,Fy,Fz,Fx_tot,Fy_tot,Fz_tot;
+      int my_first,my_last;
+      int num_elem_proc;
+      int indexA;
+       double *xaux,*yaux,*zaux;
+      double *vxaux,*vyaux,*vzaux;
+      xaux=param[0];
+      yaux=param[1];
+      zaux=param[2];
+      vxaux=param[3];
+      vyaux=param[4];
+      vzaux=param[5];
+      
+      int N_particles=N;
+      my_first =(world_rank)*N_particles/world_size;
+      my_last=(world_rank +1)*N_particles/world_size;
+      num_elem_proc=N_particles/world_size;
+      indexA=world_rank*num_elem_proc; 
 
-    for(int i =0;i<num_elem_proc;i++)
-      {
-	       
-	for(int j =0;j<N_particles;j++)
-	  {
-	    if (j==0)
-	      Fx=Fy=Fz=0;
-	    double dx=xaux[j]-xaux[i+indexA];
-	    double dy=yaux[j]-yaux[i+indexA];
-	    double dz=zaux[j]-zaux[i+indexA];
-	    double dr2 = dx*dx + dy*dy + dz*dz + soft;
-	    double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
-	    Fx+=dx*r_dr3;
-	    Fy+=dy*r_dr3;
-	    Fz+=dz*r_dr3;
+      for(int i =0;i<num_elem_proc;i++)
+	{
+	  int iA=i+indexA;
+	      	Fx=Fy=Fz=0;
+	  for(int j =0;j<N_particles;j++)
+	    {
+	      double dx=xaux[jA]-xaux[iA];
+	      double dy=yaux[jA]-yaux[iA];
+	      double dz=zaux[jA]-zaux[iA];
+	      double dr2 = dx*dx + dy*dy + dz*dz + soft;
+	      double r_dr3 = 1.0 / (dr2 * sqrt(dr2));
+	      Fx+=dx*r_dr3;
+	      Fy+=dy*r_dr3;
+	      Fz+=dz*r_dr3;
 	  
-	  }
+	    }
 
-	  param[3][i+indexA]=vxaux[i+indexA]+Fx*dt;
-	  param[4][i+indexA]=vyaux[i+indexA]+Fy*dt;
-	  param[5][i+indexA]=vzaux[i+indexA]+Fz*dt;
-
-      }
+	  param[3][iA]=vxaux[iA]+Fx*dt;
+	  param[4][iA]=vyaux[iA]+Fy*dt;
+	  param[5][iA]=vzaux[iA]+Fz*dt;
+	 
+	}
    
   
     
-    for( int i =0; i < num_elem_proc;i++)   
-      {
-
-	param[0][i+indexA]=xaux[i+indexA]+param[3][i+indexA]*dt;
-	param[1][i+indexA]=yaux[i+indexA]+param[4][i+indexA]*dt;
-	param[2][i+indexA]=zaux[i+indexA]+param[5][i+indexA]*dt;
-	MPI_Bcast(&param[0][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-	MPI_Bcast(&param[1][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-	MPI_Bcast(&param[2][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-	MPI_Bcast(&param[3][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-	MPI_Bcast(&param[4][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-	MPI_Bcast(&param[5][i+indexA],1,MPI_DOUBLE,world_rank,MPI_COMM_WORLD);
-      }
-    /*
-     for (int i=0;i<world_size;i++)
-      {
-	MPI_Bcast(&(param[0][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
-        MPI_Bcast(&(param[1][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
-	MPI_Bcast(&(param[2][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
-	MPI_Bcast(&(param[3][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
-        MPI_Bcast(&(param[4][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
-	MPI_Bcast(&(param[5][0+i*indexA]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+      for( int i =0; i < num_elem_proc;i++)
+	{
+	  int iA=i+indexA;
+	  param[0][iA]=param[0][iA]+param[3][iA]*dt;
+	  param[1][iA]=yaux[iA]+param[4][iA]*dt;
+	  param[2][iA]=zaux[iA]+param[5][iA]*dt;
+	  
+	}
       
-      }
-    */
-     
-     //MPI_Bcast(&param[0][5],1,MPI_DOUBLE,6,MPI_COMM_WORLD);
-     printf("%g ---------%d\n",param[0][5],world_rank);
-
-     
-
-
-//-----------------------------------------------------------------------------------------------------
-
-
-
+      	for (int i=0;i<world_size;i++)
+	{
+	  int a=i*num_elem_proc;
+	MPI_Bcast(&(param[0][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+        MPI_Bcast(&(param[1][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[2][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[3][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+        MPI_Bcast(&(param[4][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
+	MPI_Bcast(&(param[5][a]), num_elem_proc, MPI_DOUBLE, i, MPI_COMM_WORLD);
       
+	}
+
     }
 	  
   stop=MPI_Wtime();
