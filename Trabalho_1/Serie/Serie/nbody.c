@@ -83,11 +83,16 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 	double* restrict vy = particles -> vy;
 	double* restrict vz = particles -> vz;
 
+	double x_t[n_part];
+	double y_t[n_part];
+	double z_t[n_part];
+	double vx_t,vy_t,vz_t;
 	// Advance velocities
 	for( int i = 0; i < n_part; i++){
 		double Fx, Fy, Fz;
 		Fx = Fy = Fz = 0;
-		for( int j = 0; j < n_part; j++) {
+		for( int j = 0; j < n_part; j++)
+		  {
 			const double dx = x[j] - x[i];
 			const double dy = y[j] - y[i];
 			const double dz = z[j] - z[i];
@@ -103,17 +108,35 @@ void advance_particles(t_particles* const particles, const int n_part, const dou
 		}
 
 		// Since m = 1, F = a
-		vx[i] += Fx * dt;
-		vy[i] += Fy * dt;
-		vz[i] += Fz * dt;
+		vx_t =vx[i]+ Fx * dt;
+		vy_t =vy[i]+ Fy * dt;
+		vz_t =vz[i]+ Fz * dt;
+
+		
+
+		x_t[i] =x[i]+ vx_t * dt;
+		y_t[i] =y[i]+ vy_t * dt;
+		z_t[i] =z[i]+ vz_t * dt;
+		vx[i]=vx_t;
+		vy[i]=vy_t;
+		vz[i]=vz_t;
+	  
+        
 	};
 
 	// Advance positions
-	for( int i = 0; i < n_part; i++){
-		x[i] += vx[i] * dt;
-		y[i] += vy[i] * dt;
-		z[i] += vz[i] * dt;
-	};
+			for( int i = 0; i < n_part; i++){
+
+			  x[i]=x_t[i];
+ y[i]=y_t[i];
+  z[i]=z_t[i];
+		     
+
+			  /*
+		x[i] =x[i]+ vx[i] * dt;
+		y[i] =y[i]+ vy[i] * dt;
+		z[i] =z[i]+ vz[i] * dt;*/
+		};
 }
 
 double kinetic_energy( t_particles* const particles, const int n_part ){

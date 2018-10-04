@@ -2,7 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-
+#include <mpi.h>
+#include <assert.h>
 #include <sys/time.h>
 
 // Number of particles
@@ -37,12 +38,14 @@ typedef struct {
  */
 void init_rand01( double* const buffer, const int size ) {
     const double r_rand_max = 1.0/RAND_MAX;
+    assert(buffer != NULL);
 	for( int i = 0; i < size; i ++)
 		buffer[i] = rand() * r_rand_max;
 }
 
 void init_particles(t_particles* const particles, const int n_part) {
 
+  printf("1\n");
     particles -> x  = (double *) malloc( n_part * sizeof(double) );
     particles -> y  = (double *) malloc( n_part * sizeof(double) );
     particles -> z  = (double *) malloc( n_part * sizeof(double) );
@@ -51,7 +54,7 @@ void init_particles(t_particles* const particles, const int n_part) {
     particles -> vz = (double *) malloc( n_part * sizeof(double) );
 
 	printf("Initializing %d particles...\n", n_part );
-
+	printf("2\n");
 	srand(0);
 	init_rand01( particles ->  x, n_part );
 	init_rand01( particles ->  y, n_part );
@@ -60,6 +63,7 @@ void init_particles(t_particles* const particles, const int n_part) {
 	init_rand01( particles -> vy, n_part );
 	init_rand01( particles -> vz, n_part );
 
+	printf("3\n");
 	printf("Initialization complete.\n");
 }
 
@@ -128,17 +132,25 @@ double kinetic_energy( t_particles* const particles, const int n_part ){
 }
 
 int main (int argc, const char * argv[]) {
-
+  int world_size,world_rank;
+  MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  
+  
 	t_particles particles;
 
 	// Initialize particle positions and velocities
+       
 	init_particles( &particles, N );
 
+		
 	// Time execution
 	const double start = get_wtime();
 
 	// Advance particles
-	for( int i = 0; i < N_iter; i ++ ) {
+	for( int i = 0; i < N_iter; i ++ )
+	  {
 		printf("i = %3d, kin = %g\n", i, kinetic_energy( &particles, N ));
 		advance_particles( &particles, N, dt );
 	}
@@ -152,4 +164,7 @@ int main (int argc, const char * argv[]) {
 	printf("Total execution time: %g s\n", stop - start);
 
 	cleanup_particles(&particles);
+      
+    MPI_Finalize();
+    return 0;
 }
