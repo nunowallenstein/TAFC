@@ -27,14 +27,14 @@ int main(int argc, char *argv[])
   
     
   /*
-  cout << "teste" << endl;
-  cout	<< "Nsheet=" << N_sheets<< endl;
-  cout	<<"length="<<length<<endl ;
+    cout << "teste" << endl;
+    cout	<< "Nsheet=" << N_sheets<< endl;
+    cout	<<"length="<<length<<endl ;
   */
   double *x_eq;
   double *x;
   double *v;
-
+  double *v_eq;
   
 
 
@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
       x[i]=x_i;
       v[i]=v_i;
       v_eq[i]=0;
+  
     }
 
 
@@ -59,8 +60,9 @@ int main(int argc, char *argv[])
     {
       for(int j=0;j<N_sheets;j++)
 	{
-	  double dx=x[i]-x_eq[i];
-	  double dv=v[i]-v_eq[i];
+	  double dx,dv;
+	  dx=x[j]-x_eq[j];	   
+	  dv=v[j]-v_eq[j];
 
 	  //Força=-dx
 	  
@@ -68,12 +70,12 @@ int main(int argc, char *argv[])
 
 	  //incremento nas velocidades
 
-	  v[i]=dv+v_eq[i];
+	  v[j]=dv+v_eq[j];
 	  
 	  //incremento nas posições
 	  dx=dx+dv*dt;
 
-	  x[i]=x_eq[i]+dx;
+	  x[j]=x_eq[j]+dx;
 	    
 
 	}
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
   
   delete[] x_eq;
   delete[] v_eq;
-    delete[] x;
+  delete[] x;
   delete[] v;
 
   //delete[] x_i;
