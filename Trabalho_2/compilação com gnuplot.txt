@@ -1,0 +1,16 @@
+para compilar o ficheiro é necessário instalar:
+-gnuplot
+-Boost
+
+-Instalação do gnuplot:
+sudo dnf install gnuplot
+Ou se em Ubuntu
+sudo apt-get install gnuplot
+
+
+-Instalação do Boost:
+Seguir as instruções de instalação em
+https://www.boost.org/doc/libs/1_61_0/more/getting_started/unix-variants.html
+
+
+

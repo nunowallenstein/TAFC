@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
+#include "gnuplot-iostream.h"
+
 using namespace std;
 
 static const int N=1;
@@ -11,6 +13,7 @@ static const double dt =1;
 
 int main(int argc, char *argv[])
 {
+  Gnuplot gp;
   if (argc!=3)
     {
       cout << "This program works with two arguments, execute it by the following line" << endl << "[directory]/thisfile [length] [N_sheets]" << endl;
@@ -23,6 +26,8 @@ int main(int argc, char *argv[])
   //Posições iniciais
   double x_i=1;
   double v_i=0;
+  gp << "f(x)=x**2";
+  gp << "plot";
 
   
     
