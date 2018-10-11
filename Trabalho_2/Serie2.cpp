@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 {
   if (argc!=3)
     {
-      cout << "This program works with two arguments, execute it by the following line" << endl << "./thisfile [length] [N_sheets]" << endl;
+      cout << "This program works with two arguments, execute it by the following line" << endl << "[directory]/thisfile [length] [N_sheets]" << endl;
       return 0;
     }
   //Aquisição dos argumentos, comprimento da caixa e o número de folhas 
@@ -36,31 +36,56 @@ int main(int argc, char *argv[])
   double *v;
 
   
-  double *Dlt_x;
-  double *Dlt_v;
+
 
   
   x_eq=new double[N_sheets];
+  v_eq=new double[N_sheets]; 
   x=new double[N_sheets];
   v=new double[N_sheets];
-  Dlt_x=new double[N_sheets];
-  Dlt_v=new double[N_sheets];
+
+  //Inicialização
+  
   for (int i=0;i<N_sheets;i++)
     {
       x_eq[i]=(length/(2*N_sheets))+ (i * length/N_sheets);
-      cout << x_eq[i] << endl;
       x[i]=x_i;
       v[i]=v_i;
+      v_eq[i]=0;
     }
 
 
   for(int i=0;i<N_iter;i++)
     {
+      for(int j=0;j<N_sheets;j++)
+	{
+	  double dx=x[i]-x_eq[i];
+	  double dv=v[i]-v_eq[i];
+
+	  //Força=-dx
+	  
+	  dv=dv-dx*dt;
+
+	  //incremento nas velocidades
+
+	  v[i]=dv+v_eq[i];
+	  
+	  //incremento nas posições
+	  dx=dx+dv*dt;
+
+	  x[i]=x_eq[i]+dx;
+	    
+
+	}
 
     }
 
   
   delete[] x_eq;
+  delete[] v_eq;
+    delete[] x;
+  delete[] v;
+
   //delete[] x_i;
   // delete[] v_i;
   return 0;   
