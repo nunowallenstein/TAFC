@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
   ofstream file;
   file.open("output.txt");
   
-  Gnuplot gp; //Isto vai para o final
   if (argc!=3)
     {
       cout << "This program works with two arguments, execute it by the following line" << endl << "[directory]/thisfile [length] [N_sheets]" << endl;
@@ -98,7 +97,6 @@ int main(int argc, char *argv[])
   delete[] x;
   delete[] v;
 
-  gp << "plot 'output.txt' using 1:2";
   
   //delete[] x_i;
   // delete[] v_i;
