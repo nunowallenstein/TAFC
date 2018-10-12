@@ -1,23 +1,28 @@
 
 void root_S2()
 {
+
   static const Double_t length=10;
-  static const Int_t N=1000;
-  static const Int_t N_iter=100;
-  static const Double_t dt =0.05;
+  static const Int_t N=10;
+  static const Int_t N_iter=10000;
+  static const Double_t dt =0.01;
 
   //Vamos por numa file os tempos, as posições e as velocidades
   ofstream file;
   file.open("output.txt");
   
 
-
-  //Aquisição dos argumentos, comprimento da caixa e o número de folhas 
-
    
-  //Posições iniciais
+  // Parametros
+
+  Double_t sig=1;
+  Double_t m=4* M_PI;
+  Double_t n_0=1;
+
   Double_t x_i=1;
   Double_t v_i=0;
+
+  Double_t w_p=sqrt(4 * M_PI*pow(sig,2)/m);
 
   
     
@@ -28,10 +33,10 @@ void root_S2()
   */
   TGraph *gr[N];
   
-  Double_t **x_eq=new Double_t * [N];
+  Double_t *x_eq;
+  x_eq =new Double_t [N];
   Double_t **x=new Double_t* [N];
   Double_t **v=new Double_t* [N];
-  Double_t **v_eq=new Double_t* [N];
   Double_t *t=new Double_t[N_iter];
 
   
@@ -39,16 +44,14 @@ void root_S2()
   //Inicialização
   file << "0 "; 
   for (int i=0;i<N;i++)
-    {
-      x_eq[i]=new Double_t[N_iter];
-      v_eq[i]=new Double_t[N_iter]; 
+    {  
       x[i]=new Double_t[N_iter];
       v[i]=new Double_t[N_iter];
       
-      x_eq[i][0]=(length/(2*N))+ (i * length/N);
-      x[i][0]=x_eq[i][0]+ pow((-1),i);     
+      x_eq[i]=(length/(2*N))+ (i * length/N);
+       x[i][0]=x_eq[i]+pow((-1),i);
+       // x[i][0]=x_eq[i];      
       v[i][0]=v_i;
-      v_eq[i][0]=0;
       file << x[i][0] << " " << v[i][0] << " ";
     }
   
@@ -61,7 +64,7 @@ void root_S2()
       Double_t taux=i*dt;
       t[i]=taux;
       file << taux << " ";
-      
+      /*
        for(int j=0;j<N;j++)
 	 {
 	  
@@ -86,7 +89,16 @@ void root_S2()
 	 //	 cout << x[j][i] <<endl;   
 	 file << x[j][i] << " " << v[j][i] << " ";	  
 	 }
-         
+      */
+
+
+      for(int j=0;j<N;j++)
+	{
+	  dx=(+1)*(x[j][i-1]-x_eq[j]);
+	  v[j][i]=v[j][i-1]*cos(w_p*dt)-w_p*dx*sin(w_p)*dt;	
+	  x[j][i]=x[j][i-1]+v[j][i-1]*sin(w_p*dt)-dx*(1-cos(w_p*dt));
+	 
+	}
       file << endl;
     }
   
@@ -99,8 +111,8 @@ void root_S2()
       // auto axis[i] = gr[i]->GetXaxis();
  
       // axis->SetLimits(0.,5.);                 // along X
-      gr[i]->GetHistogram()->SetMaximum(16);   // along          
-      gr[i]->GetHistogram()->SetMinimum(0);  //   Y     
+      gr[i]->GetHistogram()->SetMaximum(10);   // along          
+      gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
       
       if (i==0)
 	{
@@ -112,8 +124,7 @@ void root_S2()
     }
 
    
-  delete[] x_eq;
-  delete[] v_eq;
+  delete x_eq;
   delete[] x;
   delete[] v;
 
