@@ -1,0 +1,102 @@
+
+void root_S2()
+{
+  static const Double_t length=5;
+  static const Int_t N=10;
+  static const Int_t N_iter=1;
+  static const Double_t dt =0.01;
+
+  //Vamos por numa file os tempos, as posições e as velocidades
+  ofstream file;
+  file.open("output.txt");
+  
+
+
+  //Aquisição dos argumentos, comprimento da caixa e o número de folhas 
+
+   
+  //Posições iniciais
+  Double_t x_i=1;
+  Double_t v_i=0;
+
+  
+    
+  /*
+    cout << "teste" << endl;
+    cout	<< "Nsheet=" << N<< endl;
+    cout	<<"length="<<length<<endl ;
+  */
+  // TGraph *gr[N];
+  
+  Double_t **x_eq=new Double_t*[N];
+  Double_t **x=new Double_t*[N];
+  Double_t **v=new Double_t*[N];
+  Double_t **v_eq=new Double_t*[N];
+  Double_t *t=new Double_t[N_iter];
+
+  
+
+  
+
+  //Inicialização
+  file << "0 ";
+  for (int i=0;i<N;i++)
+    {
+      x_eq[i]=new Double_t[N_iter];
+      v_eq[i]=new Double_t[N_iter]; 
+      x[i]=new Double_t[N_iter];
+      v[i]=new Double_t[N_iter];
+    }
+
+  for (int i=0;i<N;i++)
+    {
+      x_eq[i][0]=(length/(2*N))+ (i * length/N);
+      x[i][0]=x_i;
+      v[i][0]=v_i;
+      v_eq[i][0]=0;
+      file << x[i] << " " << v[i] << " ";
+    }
+
+  
+  file << endl;
+
+  for(int i=0;i<N_iter;i++)
+    {
+      Double_t taux=i*dt;
+      t[i]=taux;
+      file << taux << " ";
+      
+      for(int j=0;j<N;j++)
+	{
+	  Double_t dx,dv;
+	  dx=x[j][i]-x_eq[j][i];
+	  cout << x[j][i] << endl;
+	  dv=v[j][i]-v_eq[j][i];
+
+	  //Força=-dx
+	  dv=dv-dx*dt;	  
+	   //	  incremento nas velocidades
+
+	  v[j][i+1]=dv+v_eq[j][i];
+	  
+	  //incremento nas posições
+	  dx=dx+dv*dt;
+
+	  x[j][i+1]=x_eq[j][i]+dx;
+	    
+	  file << x[j][i] << " " << v[j][i] << " ";
+	  
+	}
+      
+      file << endl;
+    }
+  
+  //Output
+  // for(int i=0;i<N;i++)
+  // {
+      //  gr[i]=new TGraph(N_iter,t,t);
+  // }
+  
+  file.close();
+  
+}

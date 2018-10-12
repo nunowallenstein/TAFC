@@ -1,0 +1,8 @@
+void testes()
+{
+ 
+  TGraph *gr;
+  gr=new TGraph();
+  gr->SetPoint(1,1);
+  
+}
