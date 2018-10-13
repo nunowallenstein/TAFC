@@ -1,11 +1,16 @@
-
+#include <iostream>
+#include <stdlib.h>
+#include <fstream>
+#include <cmath>
+  using namespace std;
 void root_S2()
 {
 
-  static const Double_t length=10;
-  static const Int_t N=5;
-  static const Int_t N_iter=20000;
-  static const Double_t dt =0.001;
+
+  static const Double_t length=15;
+  static const Int_t N=10;
+  static const Int_t N_iter=2000;
+  static const Double_t dt =0.005;
 
   //Vamos por numa file os tempos, as posições e as velocidades
   ofstream file;
@@ -18,15 +23,29 @@ void root_S2()
   Double_t sig=1;
   Double_t m=4* M_PI;
   Double_t n_0=1;
+  Double_t w_p=sqrt(4 * M_PI*pow(sig,2)/m);
 
+  
   Double_t x_i=1;
   Double_t v_i=0;
 
-  Double_t w_p=sqrt(4 * M_PI*pow(sig,2)/m);
 
+  //ROOT
 
   TGraph *gr[N];
+  TH1D *h1[1];
+  h1[0]=new TH1D("h01","Velocities histogram",1000,-3,3);
+
+ 
   
+  TCanvas *c1 = new TCanvas("c1","Positions", 750, 650);
+  TCanvas *c2 = new TCanvas("c2","Velocities", 750, 650);
+
+  c1->Divide(1,1);
+  c2->Divide(1,1);
+
+
+    //Declaração dos parametros
   Double_t *x_eq;
   x_eq=new Double_t [N];
   Double_t **x=new Double_t* [N];
@@ -43,14 +62,14 @@ void root_S2()
       v[i]=new Double_t[N_iter];
       
       x_eq[i]=(length/(2*N))+ (i * length/N);
-      x[i][0]=x_eq[i]+1*pow((+1),i);
+      x[i][0]=x_eq[i]+0.5*pow((+1),i);
       // x[i][0]=x_eq[i];      
       v[i][0]=v_i;
       file << x[i][0] << " " << v[i][0] << " ";
       if (x[i][0]>length || x[i][0]<0)
 	{
 
-	  cout <<"Não é possível introduzir condições iniciais fora dos limites das paredes favor certifique-se que as folhas se encontram dentro do intervalo [0,"<<length<<"]"<<endl;
+	  cout <<"It's not possible to have initial values out of the bounds of the plasma, please make sure the initial positions are within the interval of [0,"<<length<<"]"<<endl;
 	  return;
 	}
     }
@@ -58,7 +77,7 @@ void root_S2()
   
   file << endl;
   Double_t dx,dv;
-   v[N-1][0]=-2;
+  // v[N-1][0]=-2;
 
   for(int i=1;i<N_iter;i++)
     {
@@ -117,8 +136,12 @@ void root_S2()
 	}
       file << endl;
     }
+  file.close();
+
   
   //Output
+
+  c1->cd(1);
   for(int i=0;i<N;i++)
     {
       gr[i]=new TGraph(N_iter,x[i],t);
@@ -140,11 +163,26 @@ void root_S2()
 	gr[i]->Draw("p1 same");
     }
 
-   
+
+  //Integração trapézio
+  Double_t *Int_V;
+  Int_V=new Double_t[N];
+  for (Int_t i=0;i<N;i++)
+    {
+      for(Int_t j=0;j<N_iter;j++)
+	{
+	  Int_V[i]+=v[i][j]*dt+(v[i][j+1]-v[i][j])*dt/2;
+	}
+      Int_V[i]=Int_V[i]/(N_iter*dt);
+      h1[0]->Fill(Int_V[i]);
+    }
+
+   c2->cd(1);
+   h1[0]->Draw();
   delete x_eq;
   delete[] x;
   delete[] v;
 
-  file.close();
+  
   
 }

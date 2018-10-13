@@ -1,4 +1,4 @@
-void testes(int k,int a)
+/*void testes(int k,int a)
 {
   double *x;
   x= new double[k];
@@ -18,4 +18,8 @@ void testes(int k,int a)
   y[0][1]=1;
   cout << x[1]<< endl;
   cout << y[0][1] << endl;
+}
+*/
+{
+  cout << "Hello World" << endl;
 }
