@@ -4,7 +4,7 @@ void root_S2()
 
   static const Double_t length=10;
   static const Int_t N=5;
-  static const Int_t N_iter=50000;
+  static const Int_t N_iter=20000;
   static const Double_t dt =0.001;
 
   //Vamos por numa file os tempos, as posições e as velocidades
@@ -54,11 +54,11 @@ void root_S2()
 	  return;
 	}
     }
-  v[N-1][0]=3;
+
   
   file << endl;
   Double_t dx,dv;
-
+   v[N-1][0]=-2;
 
   for(int i=1;i<N_iter;i++)
     {
@@ -122,9 +122,9 @@ void root_S2()
   for(int i=0;i<N;i++)
     {
       gr[i]=new TGraph(N_iter,x[i],t);
-      gr[i]->GetYaxis()->SetRange(0,20);
 
              auto *axis = gr[i]->GetXaxis();
+	     gr[i]->SetMarkerStyle(1);
  
          axis->SetLimits(0-2,length+2);                 // along X
 	 /*
@@ -133,11 +133,11 @@ void root_S2()
 	 */
       if (i==0)
 	{
-	  gr[i]->Draw();
+	  gr[i]->Draw("ap");
      
 	}
       else
-	gr[i]->Draw("same");
+	gr[i]->Draw("p1 same");
     }
 
    
