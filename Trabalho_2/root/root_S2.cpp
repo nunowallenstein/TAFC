@@ -1,16 +1,12 @@
-#include <iostream>
-#include <stdlib.h>
-#include <fstream>
-#include <cmath>
-  using namespace std;
 void root_S2()
 {
-
-
+ 
   static const Double_t length=15;
-  static const Int_t N=10;
+  static const Int_t N=100;
   static const Int_t N_iter=2000;
   static const Double_t dt =0.005;
+
+
 
   //Vamos por numa file os tempos, as posições e as velocidades
   ofstream file;
@@ -31,29 +27,47 @@ void root_S2()
 
 
   //ROOT
-
+  //------------------------------------------------------------------------------------------------------------
+  
+  //Gráficos
   TGraph *gr[N];
+
+
+  //Histograma
   TH1D *h1[1];
   h1[0]=new TH1D("h01","Velocities histogram",1000,-3,3);
 
  
-  
+  //Canvas
   TCanvas *c1 = new TCanvas("c1","Positions", 750, 650);
   TCanvas *c2 = new TCanvas("c2","Velocities", 750, 650);
 
   c1->Divide(1,1);
   c2->Divide(1,1);
 
+  //--------------------------------------------------------------------------------------------------------------
+  //Declaração dos parametros
 
-    //Declaração dos parametros
+  //Pos Equilibrio
   Double_t *x_eq;
   x_eq=new Double_t [N];
+
+  //Posição,array 2d para a posição e tempo
   Double_t **x=new Double_t* [N];
+
+  //Velocidade array 2d para a posição e tempo
   Double_t **v=new Double_t* [N];
+
+  //Tempo
   Double_t *t=new Double_t[N_iter];
 
-  
 
+  //-----------------------------------------------------------------------------------------------------------------
+  
+  // TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+  // fa1->Draw();
+  
+  //-----------------------------------------------------------------------------------------------------------------
   //Inicialização
   file << "0 "; 
   for (int i=0;i<N;i++)
@@ -62,13 +76,16 @@ void root_S2()
       v[i]=new Double_t[N_iter];
       
       x_eq[i]=(length/(2*N))+ (i * length/N);
-      x[i][0]=x_eq[i]+0.5*pow((+1),i);
-      // x[i][0]=x_eq[i];      
+      
+      // x[i][0]=x_eq[i]+0.5*pow((+1),i);
+      
+      x[i][0]=x_eq[i];      
       v[i][0]=v_i;
       file << x[i][0] << " " << v[i][0] << " ";
+
+      //Caso as posições iniciais não estejam na caixa
       if (x[i][0]>length || x[i][0]<0)
 	{
-
 	  cout <<"It's not possible to have initial values out of the bounds of the plasma, please make sure the initial positions are within the interval of [0,"<<length<<"]"<<endl;
 	  return;
 	}
@@ -76,8 +93,16 @@ void root_S2()
 
   
   file << endl;
+//-----------------------------------------------------------------------------------------------------------------
+//Evolução no tempo
+  
+  
   Double_t dx,dv;
-  // v[N-1][0]=-2;
+  Double_t v_old,x_eq_old;
+
+  //Variável trigger controla consoante a folha debaixo esteja em cima ou a decima em baixo
+  Int_t trigger;
+  v[0][0]=+5;
 
   for(int i=1;i<N_iter;i++)
     {
@@ -118,19 +143,71 @@ void root_S2()
 	  v[j][i]=v[j][i-1]*cos(w_p*dt)-w_p*dx*sin(w_p)*dt;	
 	  x[j][i]=x[j][i-1]+v[j][i-1]*sin(w_p*dt)-dx*(1-cos(w_p*dt));
 
-	
+	  
+	  trigger=0;
 	  //Condições de Fronteira periódicas
 	  if (x[j][i]<0)
-	  {
-	  x[j][i]=length;
-	  x_eq[j]=x_eq[j] + length;	 
-	  }
+	    {
+	      x[j][i]=length;
+	      x_eq[j]=x_eq[j] + length;
+	      trigger=1;
+	    }
 
 	  if (x[j][i]>length)
-	  {
-	  x[j][i]=0;
-	  x_eq[j]=x_eq[j]-length;	 
-	  }
+	    {
+	      x[j][i]=0;
+	      x_eq[j]=x_eq[j]-length;
+	      trigger=1;
+	    }
+
+
+	  
+	  //Crossing
+	  if(j>0&&j<N-1)
+	    {
+	      if (x[j-1][i]>x[j][i])
+		{
+		  //Troca-se as velocidades
+		  v[j-1][i]=v_old;
+		  v[j-1][i]=v[j][i];
+		  v[j][i]=v_old;
+
+		  //Troca-se os centros de equilibrio
+		  x_eq[j-1]=x_eq_old;
+		  x_eq[j-1]=x_eq[j];
+		  x_eq[j]=x_eq_old;
+		}
+
+	    }
+	  //Relativamente ao caso das condições de fronteira periódicas
+	  if (x[N-1][i] >x[0][i] && trigger ==1)
+	    {
+	      //Troca-se as velocidades
+	      v[N-1][i]=v_old;
+	      v[N-1][i]=v[0][i];
+	      v[0][i]=v_old;
+
+	      //Troca-se os centros de equilibrio
+	      x_eq[N-1]=x_eq_old;
+	      x_eq[N-1]=x_eq[0];
+	      x_eq[0]=x_eq_old;
+	    }
+	  /*
+	  if (x[N-1][i] >x[0][i]&&trigger==2)
+	    {
+	      //Troca-se as velocidades
+	      v[N-1][i]=v_old;
+	      v[N-1][i]=v[0][i];
+	      v[0][i]=v_old;
+
+	      //Troca-se os centros de equilibrio
+	      x_eq[N-1]=x_eq_old;
+	      x_eq[N-1]=x_eq[0];
+	      x_eq[0]=x_eq_old;
+
+
+	    }
+	  */
 	  file << x[j][i] << " " << v[j][i] << " ";
         
 	}
@@ -138,7 +215,7 @@ void root_S2()
     }
   file.close();
 
-  
+  //-----------------------------------------------------------------------------------------------------------------
   //Output
 
   c1->cd(1);
@@ -146,14 +223,14 @@ void root_S2()
     {
       gr[i]=new TGraph(N_iter,x[i],t);
 
-             auto *axis = gr[i]->GetXaxis();
-	     gr[i]->SetMarkerStyle(1);
+      auto *axis = gr[i]->GetXaxis();
+      gr[i]->SetMarkerStyle(1);
  
-         axis->SetLimits(0-2,length+2);                 // along X
-	 /*
-	 gr[i]->GetHistogram()->SetMaximum(10);   // along          
-      gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
-	 */
+      axis->SetLimits(0-2,length+2);                 // along X
+      /*
+	gr[i]->GetHistogram()->SetMaximum(10);   // along          
+	gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
+      */
       if (i==0)
 	{
 	  gr[i]->Draw("ap");
@@ -163,7 +240,7 @@ void root_S2()
 	gr[i]->Draw("p1 same");
     }
 
-
+//-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
   Int_V=new Double_t[N];
@@ -177,8 +254,12 @@ void root_S2()
       h1[0]->Fill(Int_V[i]);
     }
 
-   c2->cd(1);
-   h1[0]->Draw();
+  c2->cd(1);
+  h1[0]->Draw();
+
+//-----------------------------------------------------------------------------------------------------------------
+//Delete
+  
   delete x_eq;
   delete[] x;
   delete[] v;
