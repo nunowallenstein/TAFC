@@ -2,8 +2,8 @@ void root_S2()
 {
  
   static const Double_t length=10;
-  static const Int_t N=10;
-  static const Int_t N_iter=2000;
+  static const Int_t N=100;
+  static const Int_t N_iter=4000;
   static const Double_t dt =0.005;
 
 
@@ -49,16 +49,16 @@ void root_S2()
 
   //Pos Equilibrio
   Double_t *x_eq;
-  x_eq=new Double_t [N];
+  x_eq=new Double_t[N];
 
   //Posição,array 2d para a posição e tempo
-  Double_t **x=new Double_t* [N];
-
+  Double_t *x;
+  x=new Double_t[N];
   //Velocidade array 2d para a posição e tempo
-  Double_t **v=new Double_t* [N];
-
+  Double_t *v;
+  v=new Double_t[N];
   //Tempo
-  Double_t *t=new Double_t[N_iter];
+  //  Double_t *t=new Double_t[N_iter];
 
 
   //-----------------------------------------------------------------------------------------------------------------
@@ -71,19 +71,20 @@ void root_S2()
   file << "0 "; 
   for (int i=0;i<N;i++)
     {  
-      x[i]=new Double_t[N_iter];
-      v[i]=new Double_t[N_iter];
-      
+ 
       x_eq[i]=(length/(2*N))+ (i * length/N);
       
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
-      x[i][0]=x_eq[i];      
-      v[i][0]=v_i;
-      file << x[i][0] << " " << v[i][0] << " ";
+      x[i]=x_eq[i];      
+      v[i]=v_i;
 
+      if (i==N/2)
+	v[i]=-3;
+      
+      file << x[i]<< " " << v[i] << " ";
       //Caso as posições iniciais não estejam na caixa
-      if (x[i][0]>length || x[i][0]<0)
+      if (x[i]>length || x[i]<0)
 	{
 	  cout <<"It's not possible to have initial values out of the bounds of the plasma, please make sure the initial positions are within the interval of [0,"<<length<<"]"<<endl;
 	  return;
@@ -99,7 +100,9 @@ void root_S2()
   Double_t dx,dv;
   Double_t dx_old,dv_old;
   Double_t v_old,x_eq_old;
+  Double_t x_old1,v_old1;
 
+  
   //Variável trigger controla consoante a folha debaixo esteja em cima ou a decima em baixo
   Int_t trigger=0;
 
@@ -111,29 +114,29 @@ void root_S2()
   for(int i=1;i<N_iter;i++)
     {
       Double_t taux=i*dt;
-      t[i]=taux;
       file << taux << " ";
       
       for(int j=0;j<N;j++)
 	{
+	  x_old1=x[j];
+	  v_old1=v[j];
 	  
-	  dx_old=x[j][i-1]-x_eq[j];
-	  dv_old=v[j][i-1];	  
+	  dx_old=x_old1-x_eq[j];
+	  dv_old=v_old1;	  
 	  //Força=-dx
 	  dv=dv_old-(m*pow(w_p,2)*dx_old*dt);	  
 	  //	  incremento nas velocidades
 
-	  v[j][i]=dv;
+	  v[j]=dv;
 	 	  
 
 	  //incremento nas posições
 	  dx=dx_old+dv*dt;
 	 
-	  x[j][i]=x_eq[j]+dx;
+	  x[j]=x_eq[j]+dx;
 		  
 	 
-	  //	 cout << x[j][i] <<endl;   
-	  file << x[j][i] << " " << v[j][i] << " ";	  
+	  //	 cout << x[j][i] <<endl;   	  
 	
       
 
@@ -145,29 +148,26 @@ void root_S2()
 	    x[j][i]=x[j][i-1]+v[j][i-1]*sin(w_p*dt)-dx*(1-cos(w_p*dt));
 	  */
 	  
-	  if ((trigger==1 && x[j][i]>length) || (trigger==2 && x[j][i]<0 ))
+	  if ((trigger==1 && x[j]>length) || (trigger==2 && x[j]<0 ))
 	    {
 	      trigger=0;	  
 	    }
 	  //Condições de Fronteira periódicas
-	  if (x[j][i]<0 && trigger==0)
+	  if (x[j]<0 && trigger==0)
 	    {
 	      // cout<< x[j][i]<<endl;;
-	      x[j][i]=length;
+	      x[j]=length;
 	      x_eq[j]=x_eq[j] + length;
 	      trigger=1;
 	    
 	    }
 
-	  if (x[j][i]>length && trigger==0)
+	  if (x[j]>length && trigger==0)
 	    {
-	      x[j][i]=0;
+	      x[j]=0;
 	      x_eq[j]=x_eq[j]-length;
 	      trigger=2;
-	    }
-	
-	    
-        
+	    }      
 	}
       for(int j=0;j<N;j++)
 	{  
@@ -175,12 +175,12 @@ void root_S2()
 	  //Crossing
 	  if(j>0)
 	    {	  
-	      if ((x[j-1][i]>x[j][i]))
+	      if ((x[j-1]>x[j]))
 		{
 		  //Troca-se as velocidades
-		  v_old=v[j-1][i];
-		  v[j-1][i]=v[j][i];
-		  v[j][i]=v_old;
+		  v_old=v[j-1];
+		  v[j-1]=v[j];
+		  v[j]=v_old;
 		  // cout << v_old << endl;
 		  //Troca-se os centros de equilibrio
 		  x_eq_old=x_eq[j-1];
@@ -192,12 +192,12 @@ void root_S2()
 	    }
 
 	  //Relativamente ao caso das condições de fronteira periódicas
-	  if (x[N-1][i]>x[0][i] &&(trigger ==1||trigger==2))
+	  if (x[N-1]>x[0] &&(trigger ==1||trigger==2))
 	    {	     
 	      //Troca-se as velocidades
-	      v_old= v[N-1][i];
-	      v[N-1][i]=v[0][i];
-	      v[0][i]=v_old;
+	      v_old= v[N-1];
+	      v[N-1]=v[0];
+	      v[0]=v_old;
 
 	      //Troca-se os centros de equilibrio
 	      x_eq_old= x_eq[N-1];
@@ -206,12 +206,12 @@ void root_S2()
 	    }
 	  
 	  /*
-	    if (x[N-1][i] >x[0][i]&&trigger==4)
+	    if (x[N-1] >x[0]&&trigger==4)
 	    {
 	    //Troca-se as velocidades
-	    v[N-1][i]=v_old;
-	    v[N-1][i]=v[0][i];
-	    v[0][i]=v_old;
+	    v[N-1]=v_old;
+	    v[N-1]=v[0];
+	    v[0]=v_old;
 
 	    //Troca-se os centros de equilibrio
 	    x_eq[N-1]=x_eq_old;
@@ -221,20 +221,53 @@ void root_S2()
 
 	    }
 	  */
-	  file << x[j][i] << " " << v[j][i] << " ";
+	  file << x[j] << " " << v[j] << " ";
 	}
 	  
       file << endl;
     }
   file.close();
 
+
+    //-----------------------------------------------------------------------------------------------------------------
+  //Delete
+  
+  delete x_eq;
+  delete x;
+  delete v;
+
+
   //-----------------------------------------------------------------------------------------------------------------
   //Output
+  Double_t **x_out=new Double_t *[N]; 
+  Double_t **v_out=new Double_t *[N];
+  Double_t *t_out;
+  t_out=new Double_t[N_iter];
+  ifstream output;
+  output.open("output.txt");
+  for(int i=0;i<N;i++)
+    {
+      x_out[i]=new Double_t[N_iter];
+      v_out[i]=new Double_t[N_iter];
+    }
+  Int_t i=0;
+  while(!output.eof())
+    {
+      output >> t_out[i];
+      for(int j=0;j<N;j++)
+	{
+	  output >>x_out[j][i];
+	  output >> v_out[j][i];
+	}
+      i++;
+    }
+  output.close();
+  i=0;
 
   c1->cd(1);
   for(int i=0;i<N;i++)
     {
-      gr[i]=new TGraph(N_iter,x[i],t);
+      gr[i]=new TGraph(N_iter,x_out[i],t_out);
 
       auto *axis = gr[i]->GetXaxis();
       gr[i]->SetMarkerStyle(1);
@@ -260,7 +293,7 @@ void root_S2()
     {
       for(Int_t j=0;j<N_iter;j++)
 	{
-	  Int_V[i]+=v[i][j]*dt+(v[i][j+1]-v[i][j])*dt/2;
+	  Int_V[i]+=v_out[i][j]*dt+(v_out[i][j+1]-v_out[i][j])*dt/2;
 	}
       Int_V[i]=Int_V[i]/(N_iter*dt);
       h1[0]->Fill(Int_V[i]);
@@ -269,13 +302,11 @@ void root_S2()
   c2->cd(1);
   h1[0]->Draw();
 
-  //-----------------------------------------------------------------------------------------------------------------
-  //Delete
-  
-  delete x_eq;
-  delete[] x;
-  delete[] v;
 
-  
+
+
+  delete[] x_out;
+  delete[] v_out;
+  delete t_out;
   
 }
