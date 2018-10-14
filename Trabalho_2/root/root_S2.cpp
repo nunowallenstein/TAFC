@@ -1,8 +1,8 @@
 void root_S2()
 {
  
-  static const Double_t length=15;
-  static const Int_t N=100;
+  static const Double_t length=10;
+  static const Int_t N=10;
   static const Int_t N_iter=2000;
   static const Double_t dt =0.005;
 
@@ -15,7 +15,6 @@ void root_S2()
 
    
   // Parametros
-
   Double_t sig=1;
   Double_t m=4* M_PI;
   Double_t n_0=1;
@@ -93,124 +92,138 @@ void root_S2()
 
   
   file << endl;
-//-----------------------------------------------------------------------------------------------------------------
-//Evolução no tempo
+  //-----------------------------------------------------------------------------------------------------------------
+  //Evolução no tempo
   
   
   Double_t dx,dv;
+  Double_t dx_old,dv_old;
   Double_t v_old,x_eq_old;
 
   //Variável trigger controla consoante a folha debaixo esteja em cima ou a decima em baixo
-  Int_t trigger;
-  v[0][0]=+5;
+  Int_t trigger=0;
+
+  //Crossings
+  Int_t trigger_2;
+
+  
 
   for(int i=1;i<N_iter;i++)
     {
       Double_t taux=i*dt;
       t[i]=taux;
       file << taux << " ";
-      /*
-	for(int j=0;j<N;j++)
-	{
-	  
-	dx_old=x[j][i-1]-x_eq[j][i-1];
-	// cout << dx<<endl;
-	dv_old=v[j][i-1]-v_eq[j][i-1];
-	  
-	//Força=-dx
-	dv=dv_old-dx_old*dt;	  
-	//	  incremento nas velocidades
-	v_eq[j][i]=v_eq[j][i-1];
-	v[j][i]=dv+v_eq[j][i];
-	 	  
-
-	//incremento nas posições
-	dx=dx_old+dv*dt;
-	 
-	x_eq[j][i]=x_eq[j][i-1];
-	x[j][i]=x_eq[j][i]+dx;
-		  
-	 
-	//	 cout << x[j][i] <<endl;   
-	file << x[j][i] << " " << v[j][i] << " ";	  
-	}
-      */
-
       
       for(int j=0;j<N;j++)
 	{
-	  dx=(+1)*(x[j][i-1]-x_eq[j]);
-	  v[j][i]=v[j][i-1]*cos(w_p*dt)-w_p*dx*sin(w_p)*dt;	
-	  x[j][i]=x[j][i-1]+v[j][i-1]*sin(w_p*dt)-dx*(1-cos(w_p*dt));
-
 	  
-	  trigger=0;
-	  //Condições de Fronteira periódicas
-	  if (x[j][i]<0)
+	  dx_old=x[j][i-1]-x_eq[j];
+	  dv_old=v[j][i-1];	  
+	  //Força=-dx
+	  dv=dv_old-(m*pow(w_p,2)*dx_old*dt);	  
+	  //	  incremento nas velocidades
+
+	  v[j][i]=dv;
+	 	  
+
+	  //incremento nas posições
+	  dx=dx_old+dv*dt;
+	 
+	  x[j][i]=x_eq[j]+dx;
+		  
+	 
+	  //	 cout << x[j][i] <<endl;   
+	  file << x[j][i] << " " << v[j][i] << " ";	  
+	
+      
+
+	  /*
+	    for(int j=0;j<N;j++)
 	    {
+	    dx=(+1)*(x[j][i-1]-x_eq[j]);
+	    v[j][i]=v[j][i-1]*cos(w_p*dt)-w_p*dx*sin(w_p)*dt;	
+	    x[j][i]=x[j][i-1]+v[j][i-1]*sin(w_p*dt)-dx*(1-cos(w_p*dt));
+	  */
+	  
+	  if ((trigger==1 && x[j][i]>length) || (trigger==2 && x[j][i]<0 ))
+	    {
+	      trigger=0;	  
+	    }
+	  //Condições de Fronteira periódicas
+	  if (x[j][i]<0 && trigger==0)
+	    {
+	      // cout<< x[j][i]<<endl;;
 	      x[j][i]=length;
 	      x_eq[j]=x_eq[j] + length;
 	      trigger=1;
+	    
 	    }
 
-	  if (x[j][i]>length)
+	  if (x[j][i]>length && trigger==0)
 	    {
 	      x[j][i]=0;
 	      x_eq[j]=x_eq[j]-length;
-	      trigger=1;
+	      trigger=2;
 	    }
-
-
-	  
+	
+	    
+        
+	}
+      for(int j=0;j<N;j++)
+	{  
+	   
 	  //Crossing
-	  if(j>0&&j<N-1)
-	    {
-	      if (x[j-1][i]>x[j][i])
+	  if(j>0)
+	    {	  
+	      if ((x[j-1][i]>x[j][i]))
 		{
 		  //Troca-se as velocidades
-		  v[j-1][i]=v_old;
+		  v_old=v[j-1][i];
 		  v[j-1][i]=v[j][i];
 		  v[j][i]=v_old;
-
+		  // cout << v_old << endl;
 		  //Troca-se os centros de equilibrio
-		  x_eq[j-1]=x_eq_old;
+		  x_eq_old=x_eq[j-1];
 		  x_eq[j-1]=x_eq[j];
 		  x_eq[j]=x_eq_old;
+	    
+	      
 		}
-
 	    }
+
 	  //Relativamente ao caso das condições de fronteira periódicas
-	  if (x[N-1][i] >x[0][i] && trigger ==1)
-	    {
+	  if (x[N-1][i]>x[0][i] &&(trigger ==1||trigger==2))
+	    {	     
 	      //Troca-se as velocidades
-	      v[N-1][i]=v_old;
+	      v_old= v[N-1][i];
 	      v[N-1][i]=v[0][i];
 	      v[0][i]=v_old;
 
 	      //Troca-se os centros de equilibrio
-	      x_eq[N-1]=x_eq_old;
+	      x_eq_old= x_eq[N-1];
 	      x_eq[N-1]=x_eq[0];
 	      x_eq[0]=x_eq_old;
 	    }
+	  
 	  /*
-	  if (x[N-1][i] >x[0][i]&&trigger==2)
+	    if (x[N-1][i] >x[0][i]&&trigger==4)
 	    {
-	      //Troca-se as velocidades
-	      v[N-1][i]=v_old;
-	      v[N-1][i]=v[0][i];
-	      v[0][i]=v_old;
+	    //Troca-se as velocidades
+	    v[N-1][i]=v_old;
+	    v[N-1][i]=v[0][i];
+	    v[0][i]=v_old;
 
-	      //Troca-se os centros de equilibrio
-	      x_eq[N-1]=x_eq_old;
-	      x_eq[N-1]=x_eq[0];
-	      x_eq[0]=x_eq_old;
+	    //Troca-se os centros de equilibrio
+	    x_eq[N-1]=x_eq_old;
+	    x_eq[N-1]=x_eq[0];
+	    x_eq[0]=x_eq_old;
 
 
 	    }
 	  */
 	  file << x[j][i] << " " << v[j][i] << " ";
-        
 	}
+	  
       file << endl;
     }
   file.close();
@@ -226,21 +239,20 @@ void root_S2()
       auto *axis = gr[i]->GetXaxis();
       gr[i]->SetMarkerStyle(1);
  
-      axis->SetLimits(0-2,length+2);                 // along X
+      axis->SetLimits(0,length);
+      //   axis->SetLimits(4500,6000);  // along X
+    
       /*
 	gr[i]->GetHistogram()->SetMaximum(10);   // along          
 	gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
       */
-      if (i==0)
-	{
-	  gr[i]->Draw("ap");
-     
-	}
-      else
-	gr[i]->Draw("p1 same");
+      
+       if (i==0)  gr[i]->Draw("ap");
+       else  gr[i]->Draw("p1 same");
     }
 
-//-----------------------------------------------------------------------------------------------------------------
+
+  //-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
   Int_V=new Double_t[N];
@@ -257,8 +269,8 @@ void root_S2()
   c2->cd(1);
   h1[0]->Draw();
 
-//-----------------------------------------------------------------------------------------------------------------
-//Delete
+  //-----------------------------------------------------------------------------------------------------------------
+  //Delete
   
   delete x_eq;
   delete[] x;
