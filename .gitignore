@@ -3,5 +3,7 @@
 !/Trabalho_1
 /Trabalho_1/*
 !/Trabalho_1/Serie
-!/Trabalho_2
 
+!/Trabalho_2
+/Trabalho_2/root/checkpoint.cpp
+/Trabalho_2/root/output.txt
