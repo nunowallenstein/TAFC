@@ -77,10 +77,10 @@ void root_S2()
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
       x[i]=x_eq[i];      
-      v[i]=v_i;
+      v[i]=(-0.5)*pow(-1,i);
 
-      if (i==N/2)
-	v[i]=-3;
+      if (i==0)
+	v[i]=-1;
       
       file << x[i]<< " " << v[i] << " ";
       //Caso as posições iniciais não estejam na caixa
