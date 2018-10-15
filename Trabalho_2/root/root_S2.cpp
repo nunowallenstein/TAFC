@@ -1,9 +1,9 @@
 void root_S2()
 {
  
-  static const Double_t length=15;
-  static const Int_t N=10;
-  static const Int_t N_iter=4000;
+  static const Double_t length=10;
+  static const Int_t N=20;
+  static const Int_t N_iter=10000;
   static const Double_t dt =0.005;
 
 
@@ -52,11 +52,10 @@ void root_S2()
   x_eq=new Double_t[N];
 
   //Posição,array 2d para a posição e tempo
-  Double_t *x;
-  x=new Double_t[N];
+  Double_t **x=new Double_t *[N];
+  
   //Velocidade array 2d para a posição e tempo
-  Double_t *v;
-  v=new Double_t[N];
+  Double_t **v=new Double_t *[N];
   //Tempo
   //  Double_t *t=new Double_t[N_iter];
 
@@ -73,23 +72,28 @@ void root_S2()
   file << "0 "; 
   for (int i=0;i<N;i++)
     {  
-    
+
+      x[i]=new Double_t[2];
+      v[i]=new Double_t[2];
+      
       x_eq[i]=(length/(2*N))+ (i * length/N);
       
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
-      x[i]=x_eq[i];      
-      v[i]=(0)*pow(-1,i);
-
-      if(i==0)
+      x[i][0]=x_eq[i];      
+      // v[i][0]=2.5*pow(-1,i);
+      v[i][0]=0;
+       if(i==0)
 	{
-	  v[i]=-7;
-	  x[i]=1;
+	    v[i][0]=-5;
+ 
 	}
-      
-      file << x[i]<< " " << v[i] << " ";
+
+      // if (i==(N/2-1))
+      //	v[i]=2;   
+      file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
-      if (x[i]>length || x[i]<0)
+      if (x[i][0]>length || x[i][0]<0)
 	{
 	  cout <<"It's not possible to have initial values out of the bounds of the plasma, please make sure the initial positions are within the interval of [0,"<<length<<"]"<<endl;
 	  return;
@@ -105,9 +109,14 @@ void root_S2()
   
   Double_t dx,dv;
   Double_t dx_old,dv_old;
+  Double_t dx_old_i,dx_old_j;
   Double_t v_old,x_eq_old,x_old;
-  Double_t x_old1,v_old1;
-
+  Double_t x_old_i,x_old_j;
+  Double_t v_old_i,v_old_j;
+  Double_t x_btw_i,x_btw_j;
+  Double_t v_btw_i,v_btw_j;
+    
+  Double_t dtc1,dtc2,dt_f;
   
   //Variável trigger controla consoante a folha debaixo esteja em cima ou a decima em baixo
 
@@ -122,112 +131,123 @@ void root_S2()
     {
       Double_t taux=i*dt;
       file << taux << " ";
-      
-	for(int j=0;j<N;j++)
-	{
-	x_old1=x[j];
-	v_old1=v[j];
-	  
-	dx_old=x_old1-x_eq[j];
-	dv_old=v_old1;	  
-	//Força=-dx
-	dv=dv_old-(m*pow(w_p,2)*dx_old*dt);	  
-	//	  incremento nas velocidades
-
-	v[j]=dv;
-	 	  
-
-	//incremento nas posições
-	dx=dx_old+dv*dt;
-	 
-	x[j]=x_eq[j]+dx;
-		  
-	 
-	//	 cout << x[j][i] <<endl;   	  
-	
-      
-
-      /*  
+          
       for(int j=0;j<N;j++)
 	{
-	  dx_old=(+1)*(x[j]-x_eq[j]);
-	  v[j]=v[j]*cos(w_p*dt)-w_p*dx_old*sin(w_p)*dt;	
-	  x[j]=x[j]+v[j]*sin(w_p*dt)-dx_old*(1-cos(w_p*dt));
-	  
-      */  
+	  x[j][1]=x[j][0];
+	  v[j][1]=v[j][0];
+	 
+	  dx_old=(+1)*(x[j][1]-x_eq[j]);
+	  if(j>0)
+	    {
+	      //acesso ao x[j-1] da iteração anterior
+	      // x_old_i=(x[j-1]-v[j-1]/tan(w_p*dt)+x_eq[j-1]*((w_p)*(tan(w_p*dt))*sin(w_p*dt)+1-cos(w_p*dt)))/((w_p)*(tan(w_p*dt))*sin(w_p*dt)+(cos(w_p*dt)));
+	      x_old_i=x[j-1][1];
+	      dx_old_i=x_old_i-x_eq[j-1];									    
+	      x_old_j=x[j][1];
+	      dx_old_j=x_old_j-x_eq[j];
 
+	      v_old_i=v[j-1][1];
+	      // v_old_i=v[j-1]/cos(w_p*dt)+w_p*(dx_old_i)*tan(w_p*dt);
+	 
+	      v_old_j=v[j][1];
+	     
+	    	  
+	    }
+	  
+	  v[j][0]=v[j][0]*cos(w_p*dt)-w_p*dx_old*sin(w_p*dt);	
+	  x[j][0]=x[j][0]+v[j][0]*sin(w_p*dt)-dx_old*(1-cos(w_p*dt));
+	  
+	  //Crossings
+	  if(j>0)
+	    {
+	      if ((x[j-1][0]>x[j][0]))
+		{
+		  
+		  //Avança-se dtc1
+	
+		  dtc1=dt*(x_old_j-x_old_i)/(x_old_j-x_old_i+x[j-1][0]-x[j][0]);
+		 
+		  
+		  v_btw_i=v_old_i*cos(w_p*dtc1)-w_p*dx_old_i*sin(w_p*dtc1);	
+		  v_btw_j=v_old_j*cos(w_p*dtc1)-w_p*dx_old_j*sin(w_p*dtc1);
+
+		  x_btw_i=x_old_i+v_old_i*sin(w_p*dt)-dx_old_i*(1-cos(w_p*dtc1));
+		  x_btw_j=x_old_j+v_old_j*sin(w_p*dt)-dx_old_j*(1-cos(w_p*dtc1));
+
+		  
+		  //Avança-se dtc2
+
+		  dx_old_j=x_btw_j-x_eq[j];
+		  dx_old_i=x_btw_i-x_eq[j-1];
+		  
+		  dtc2=dtc1*(x_old_j-x_old_i)/(x_old_j-x_old_i+x_btw_i-x_btw_j);
+
+		 
+		  v_old_i=v_btw_i*cos(w_p*dtc2)-w_p*dx_old_i*sin(w_p*dtc2);	
+		  v_old_j=v_btw_j*cos(w_p*dtc2)-w_p*dx_old_j*sin(w_p*dtc2);
+
+		  x_old_i=x_btw_i+v_btw_i*sin(w_p*dtc2)-dx_old_i*(1-cos(w_p*dtc2));
+		  x_old_j=x_btw_j+v_btw_j*sin(w_p*dtc2)-dx_old_j*(1-cos(w_p*dtc2));
+
+		  //Troca-se as velocidades
+		  v_old=v_old_i;
+		  v_old_i=v_old_j;
+		  v_old_j=v_old;
+		 
+		  //Troca-se os centros de equilibrio
+		  x_eq_old=x_eq[j-1];
+		  x_eq[j-1]=x_eq[j];
+		  x_eq[j]=x_eq_old;
+
+		  //Propagation for the remainder of the timestep
+		  dt_f=dt-dtc2;
+		
+
+		  dx_old_j=x_old_j-x_eq[j];
+		  dx_old_i=x_old_i-x_eq[j-1];
+		   
+		  v_old_i=v_old_i*cos(w_p*dt_f)-w_p*dx_old_i*sin(w_p*dt_f);	
+		  v_old_j=v_old_j*cos(w_p*dt_f)-w_p*dx_old_j*sin(w_p*dt_f);
+
+		  x_old_i=x_old_i+v_old_i*sin(w_p*dt_f)-dx_old_i*(1-cos(w_p*dt_f));
+		  x_old_j=x_old_j+v_old_j*sin(w_p*dt_f)-dx_old_j*(1-cos(w_p*dt_f));
+
+		  //Aplica-se as correcções
+		  x[j-1][0]=x_old_i;
+		  x[j][0]=x_old_j;
+		  v[j-1][0]=v_old_i;
+		  v[j][0]=v_old_j;
+		  
+		  
+		}
+	   
+	    }
+	  
+	}  
+    
+
+      for (Int_t j=0;j<N;j++)
+	{
 	  //Condições de Fronteira periódicas
-	  if (x[j]<0&&trigger_1==0)
+	  if (x[j][0]<0)
 	    {
 	      // cout<< x[j][i]<<endl;;
-	      x[j]=length;
+	      x[j][0]=length;
 	      x_eq[j]=x_eq[j] + length;
 	      trigger_1=1;
 	      //   cout << trigger<<endl;
 	    }
 
-	  if (x[j]>length&&trigger_2==0)
+	  if (x[j][0]>length)
 	    {
-	      x[j]=0;
+	      x[j][0]=0;
 	      x_eq[j]=x_eq[j]-length;
 	      trigger_2=1;
 	    }
-	  
-
 	}
-
-      /*  //Reordenação dos vectores consoante a sua posição relativa
-      for(int u=0;u<N;u++)
-	{
-	  if (trigger_1==1)
-	    {
-	      if(u==0)
-		{
-		  x_old=x[0];
-		  v_old=v[0];
-		  x_eq_old=x_eq[0];
-		}
-	  
-	      if (u>0)
-		{
-		  x[u-1]=x[u];
-		  v[u-1]=v[u];
-		  x_eq[u-1]=x_eq[u];
-		}
-	      if(u==N-1)
-		{
-		  x[N-1]=x_old;
-		  v[N-1]=v_old;
-		  x_eq[N-1]=x_eq_old;
-		}
-	    }
-
-	  if (trigger_2==1)
-	    {
-	      if(u==0)
-		{
-		  x_old=x[N-1];
-		  v_old= v[N-1];
-		  x_eq_old=x_eq[N-1];
-		}
-	      if (u<N-1)
-		{
-		  x[u+1]=x[u];
-		  v[u+1]=v[u];
-		  x_eq[u+1]=x_eq[u];
-		}
-	      if(u==N-1)
-		{
-		  x[0]=x_old;
-		  v[0]=v_old;
-		  x_eq[0]=x_eq_old;	    
-		}
-	    }
-	  
-	}
-  
-      */
-	
+      //Reordenação dos vectores consoante a sua posição relativa
+ 
       //Bubblesort
       if (trigger_1==1 ||trigger_2==1)
 	{
@@ -236,15 +256,15 @@ void root_S2()
 	      for(Int_t j=i+1;j<N;j++)
 		{
 		
-		  if(x[j]<x[i])
+		  if(x[j][0]<x[i][0])
 		    {
-		      x_old=x[i];
-		      x[i]=x[j];
-		      x[j]=x_old;
+		      x_old=x[i][0];
+		      x[i][0]=x[j][0];
+		      x[j][0]=x_old;
 
-		      v_old=v[i];
-		      v[i]=v[j];
-		      v[j]=v_old;
+		      v_old=v[i][0];
+		      v[i][0]=v[j][0];
+		      v[j][0]=v_old;
 
 		      x_eq_old=x_eq[i];
 		      x_eq[i]=x_eq[j];
@@ -253,54 +273,17 @@ void root_S2()
 		    }
 		}
 	    }
-      
-	}    
-      
-	
+        
+	  trigger_1=0;
+	  trigger_2=0;
 
-     trigger_1=0;
-      trigger_2=0;
-      for(int j=0;j<N;j++)
-	{
-	  //Crossing
-	  if(j>0)
-	    {
-	      if ((x[j-1]>x[j]))
-		{
-		  //Troca-se as velocidades
-		  v_old=v[j-1];
-		  v[j-1]=v[j];
-		  v[j]=v_old;
-		 
-		  //Troca-se os centros de equilibrio
-		  x_eq_old=x_eq[j-1];
-		  x_eq[j-1]=x_eq[j];
-		  x_eq[j]=x_eq_old;
-		}
-	    }
 	 
-	  //Relativamente ao caso das condições de fronteira periódicas
-	  /*
-	    if (x[a]>x[j] &&(trigger ==1))
-	    {
-
-	    // cout <<taux<<" "<< x[N-1]<< " " << x[0] << endl;
-	    if(trigger==1)
-	    cout << trigger[0] << endl;
-	    //Troca-se as velocidades
-	    v_old=v[N-1];
-	    v[N-1]=v[0];
-	    v[0]=v_old;
-
-	    //Troca-se os centros de equilibrio
-	    x_eq_old= x_eq[N-1];
-	    x_eq[N-1]=x_eq[0];
-	    x_eq[0]=x_eq_old;
-	    }
-	  */
-	  file << x[j] << " " << v[j] << " ";
 	}
-	  
+
+      for(Int_t i=0;i<N;i++)
+	{	 
+	  file << x[i][0] << " " << v[i][0] << " ";
+	}
       file << endl;
     }
   file.close();
@@ -310,8 +293,8 @@ void root_S2()
   //Delete
   
   delete x_eq;
-  delete x;
-  delete v;
+  delete[] x;
+  delete[] v;
 
 
   //-----------------------------------------------------------------------------------------------------------------
@@ -357,10 +340,9 @@ void root_S2()
 	gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
       */
       
-      if (i==0) gr[i]->Draw("ap");
-      else  gr[i]->Draw("p1 same");
+       if (i==0) gr[i]->Draw("ap");
+        else  gr[i]->Draw("p1 same");
     }
-
   //-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
