@@ -2,7 +2,7 @@ void root_S2()
 {
  
   static const Double_t length=10;
-  static const Int_t N=20;
+  static const Int_t N=10;
   static const Int_t N_iter=10000;
   static const Double_t dt =0.005;
 
@@ -15,22 +15,25 @@ void root_S2()
 
    
   // Parametros
-  Double_t sig=1;
   Double_t m=4* M_PI;
   Double_t n_0=1;
-  Double_t w_p=sqrt(4 * M_PI*pow(sig,2)/m);
- 
+  Double_t e=1;
+  Double_t w_p=sqrt(4 * M_PI*pow(e,2)*n_0/m);
+
   
   Double_t x_i=1;
   Double_t v_i=0;
 
+  //Output Electric Field
+  Int_t Nparts=1000;     //Spatial resolution total=length/Nparts
+  Int_t t_in=0;       //Iteração do tempo que queremos saber o campo eléctrico
 
   //ROOT
   //------------------------------------------------------------------------------------------------------------
   
   //Gráficos
   TGraph *gr[N];
-
+  TGraph *E_gr;
 
   //Histograma
   TH1D *h1[1];
@@ -40,10 +43,11 @@ void root_S2()
   //Canvas
   TCanvas *c1 = new TCanvas("c_pos","Positions", 750, 650);
   TCanvas *c2 = new TCanvas("c_Vel","Velocities", 750, 650);
+  TCanvas *c3 = new TCanvas("c_E","Electric Field", 750, 650);
 
   c1->Divide(1,1);
   c2->Divide(1,1);
-
+  c3->Divide(1,1);
   //--------------------------------------------------------------------------------------------------------------
   //Declaração dos parametros
 
@@ -81,14 +85,14 @@ void root_S2()
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
       x[i][0]=x_eq[i];      
-      // v[i][0]=2.5*pow(-1,i);
-      v[i][0]=0;
-       if(i==0)
+      v[i][0]=0 ;
+    
+       /*       if(i==N/2)
 	{
 	    v[i][0]=-5;
  
 	}
-
+       */
       // if (i==(N/2-1))
       //	v[i]=2;   
       file << x[i][0]<< " " << v[i][0] << " ";
@@ -134,22 +138,19 @@ void root_S2()
           
       for(int j=0;j<N;j++)
 	{
+	  //guardar as variáveis x e y no tempo anterior, para aplicar a condição de crossing para j e j-1
 	  x[j][1]=x[j][0];
 	  v[j][1]=v[j][0];
 	 
 	  dx_old=(+1)*(x[j][1]-x_eq[j]);
 	  if(j>0)
 	    {
-	      //acesso ao x[j-1] da iteração anterior
-	      // x_old_i=(x[j-1]-v[j-1]/tan(w_p*dt)+x_eq[j-1]*((w_p)*(tan(w_p*dt))*sin(w_p*dt)+1-cos(w_p*dt)))/((w_p)*(tan(w_p*dt))*sin(w_p*dt)+(cos(w_p*dt)));
+	      
 	      x_old_i=x[j-1][1];
 	      dx_old_i=x_old_i-x_eq[j-1];									    
 	      x_old_j=x[j][1];
 	      dx_old_j=x_old_j-x_eq[j];
-
 	      v_old_i=v[j-1][1];
-	      // v_old_i=v[j-1]/cos(w_p*dt)+w_p*(dx_old_i)*tan(w_p*dt);
-	 
 	      v_old_j=v[j][1];
 	     
 	    	  
@@ -324,6 +325,119 @@ void root_S2()
   output.close();
   i=0;
 
+  //---------------------------------------------------------------------------------------------------------------------------------------
+  //Campo Eléctrico
+
+
+  //Dividi o troço em 3 partes, inicial, médio e fim, calculo o campo e o valor de x a que corresponde
+  /*
+  Double_t *E;
+    E=new Double_t[Nparts];
+  Double_t *x_axis;
+  x_axis=new Double_t[Nparts];
+  Int_t m1;
+  Int_t m2;
+  Double_t dx2,dx3;
+  E[0]=-e;
+  Int_t w=0;
+  x_axis[0]=0;
+  double dx1=x_out[w][t_in]/parts;
+  for(Int_t m=0;m<parts;m++)
+    {
+      E[m+1]=E[m]+e*n_0*dx1;
+      x_axis[m+1]=x_axis[m]+dx1;
+    }
+  E[parts+1]=E[parts]-e;
+  x_axis[parts+1]=x_axis[parts];
+
+ 
+     
+      for(w=1;w<N-1;w++)
+	{
+	 dx2=(x_out[w][t_in]-x_out[w-1][t_in])/parts;
+	  for(Int_t m=1;m<parts+1;m++)
+	    {
+	      m1=w*parts+m;
+	      E[m1+1]=E[m1]+e*n_0*dx2;
+	      x_axis[m1+1]=x_axis[m1]+dx2;
+	      
+	    }
+	  E[m1+1]=E[m1]-e;
+	  x_axis[m1+1]=x_axis[m1];
+	  
+ 
+	}
+    
+      w=N-1;
+      
+	  dx3=(length-x_out[w][t_in])/parts;
+	  for(Int_t m=1;m<parts+1;m++)
+	    {
+	       m2=parts*w+m;
+	      E[m2+1]=E[m2]+e*n_0*dx3;
+	      x_axis[m2+1]=x_axis[m2]+dx3;
+     
+	    }
+	    
+	
+
+	 for (int i=0;i<Nparts;i++)
+	{
+	  // cout<< E[i]<<endl;
+	}
+  */
+  Double_t *E;
+  E=new Double_t[Nparts];
+  Double_t *x_axis;
+  x_axis=new Double_t[Nparts];
+
+  Double_t dx1=length/Nparts;
+  
+  for (Int_t i=0 ;i<Nparts;i++)
+    {
+
+      E[i]=0;
+      x_axis[i]=(i)*length/Nparts;
+  
+    }
+
+ Int_t a=0;
+  for (Int_t i=1;i<Nparts;i++)
+    {
+      E[i]=E[i-1]+ e*n_0*dx1;
+      
+       for(Int_t j=0;j<N;j++)
+    	{
+	  
+	      if((x_axis[i-1]<=x_out[j][t_in])&&(x_axis[i]>=x_out[j][t_in]))
+		{
+		  if ((i-a)==1)//para evitar incrementações repetitivas
+		    continue;
+		    a=i ;		   
+		E[i]=E[i]-e;  
+		}
+	
+	}
+         
+    }
+  
+      //Desenho do gráfico
+      c3->cd(1);
+     
+
+      E_gr=new TGraph(Nparts,x_axis,E);
+  
+      auto *axis_1 = E_gr->GetXaxis();
+      E_gr->SetMarkerStyle(1); 
+      axis_1->SetLimits(0,length+2);
+      E_gr->Draw();
+
+
+    
+  
+	
+  //----------------------------------------------------------------------------------------------------------------------------------------
+  //Gráficos
   c1->cd(1);
   for(int i=0;i<N;i++)
     {
@@ -341,8 +455,9 @@ void root_S2()
       */
       
        if (i==0) gr[i]->Draw("ap");
-        else  gr[i]->Draw("p1 same");
+       else  gr[i]->Draw("p1 same");
     }
+
   //-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
@@ -362,7 +477,8 @@ void root_S2()
 
 
 
-
+  delete E;
+  delete x_axis;
   delete[] x_out;
   delete[] v_out;
   delete t_out;
