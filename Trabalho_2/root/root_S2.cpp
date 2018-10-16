@@ -1,8 +1,10 @@
+#include <algorithm>
+
 void root_S2()
 {
  
-  static const Double_t length=10;
-  static const Int_t N=10;
+  static const Double_t length=30;
+  static const Int_t N=40;
   static const Int_t N_iter=10000;
   static const Double_t dt =0.005;
 
@@ -11,7 +13,7 @@ void root_S2()
   //Vamos por numa file os tempos, as posições e as velocidades
   ofstream file;
   file.open("output.txt");
-  
+
 
    
   // Parametros
@@ -22,12 +24,17 @@ void root_S2()
 
   
   Double_t x_i=1;
-  Double_t v_i=0;
+  Double_t v_i=0; //v_i em unidades de vthermal
+
+
 
   //Output Electric Field
-  Int_t Nparts=1000;     //Spatial resolution total=length/Nparts
+  Int_t parts=100;     //partitions per sheet
   Int_t t_in=0;       //Iteração do tempo que queremos saber o campo eléctrico
 
+
+
+  
   //ROOT
   //------------------------------------------------------------------------------------------------------------
   
@@ -60,16 +67,34 @@ void root_S2()
   
   //Velocidade array 2d para a posição e tempo
   Double_t **v=new Double_t *[N];
-  //Tempo
-  //  Double_t *t=new Double_t[N_iter];
-
  
-  
 
-  //-----------------------------------------------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------------------------------------------
+  //Gaussiana
+  Double_t sigma=1;
+ Double_t mu=0;
   
-  // TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
-  // fa1->Draw();
+  Double_t *gauss;
+  gauss=new Double_t[N];
+  Double_t *v_gauss;
+  v_gauss=new Double_t[N];
+  // cout <<"------------ORDENADO-------------"<<endl;
+  for(Int_t i=0;i<N;i++)
+    {
+     v_gauss[i]=i*length/N;
+     
+     gauss[i]=(1/(sigma*sqrt(2* M_PI)))*exp(((-1/2)*pow(((v_gauss[i]-mu)/sigma),2)));
+     //cout << exp(pow(v_gauss[i],2))<<endl;
+     //   cout << v_gauss[i]<< endl;
+    }
+  //  cout <<"------------DESORDENADO-------------"<<endl;
+  // random_shuffle(&gauss[0],&gauss[N-1]);
+    for(Int_t i=0;i<N;i++)
+    {
+   
+      // cout << gauss[i]<<endl;
+    }
   
   //-----------------------------------------------------------------------------------------------------------------
   //Inicialização
@@ -84,17 +109,10 @@ void root_S2()
       
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
-      x[i][0]=x_eq[i];      
-      v[i][0]=0 ;
-    
-       /*       if(i==N/2)
-	{
-	    v[i][0]=-5;
+      x[i][0]=x_eq[i];
+      if(i==0)
+      v[i][0]=0;
  
-	}
-       */
-      // if (i==(N/2-1))
-      //	v[i]=2;   
       file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
       if (x[i][0]>length || x[i][0]<0)
@@ -326,111 +344,85 @@ void root_S2()
   i=0;
 
   //---------------------------------------------------------------------------------------------------------------------------------------
-  //Campo Eléctrico
-
-
-  //Dividi o troço em 3 partes, inicial, médio e fim, calculo o campo e o valor de x a que corresponde
-  /*
-  Double_t *E;
-    E=new Double_t[Nparts];
-  Double_t *x_axis;
-  x_axis=new Double_t[Nparts];
-  Int_t m1;
-  Int_t m2;
-  Double_t dx2,dx3;
-  E[0]=-e;
-  Int_t w=0;
-  x_axis[0]=0;
-  double dx1=x_out[w][t_in]/parts;
-  for(Int_t m=0;m<parts;m++)
+  
+  //Outro Campo electrico
+  
+  Double_t **x_aux=new Double_t*[N+1];
+  for(Int_t i=0;i<N+1;i++)
     {
-      E[m+1]=E[m]+e*n_0*dx1;
-      x_axis[m+1]=x_axis[m]+dx1;
+      x_aux[i]=new Double_t[parts];       
     }
-  E[parts+1]=E[parts]-e;
-  x_axis[parts+1]=x_axis[parts];
 
- 
-     
-      for(w=1;w<N-1;w++)
+  x_aux[N][parts-1]=length;
+
+  for(Int_t i=0;i<N+1;i++)
+    {
+      if (i==0)
 	{
-	 dx2=(x_out[w][t_in]-x_out[w-1][t_in])/parts;
-	  for(Int_t m=1;m<parts+1;m++)
+	  for(Int_t j=0;j<parts;j++)
 	    {
-	      m1=w*parts+m;
-	      E[m1+1]=E[m1]+e*n_0*dx2;
-	      x_axis[m1+1]=x_axis[m1]+dx2;
-	      
+	      x_aux[i][j]=j*x_out[i][t_in]/(parts);
+	 
 	    }
-	  E[m1+1]=E[m1]-e;
-	  x_axis[m1+1]=x_axis[m1];
-	  
- 
 	}
-    
-      w=N-1;
-      
-	  dx3=(length-x_out[w][t_in])/parts;
-	  for(Int_t m=1;m<parts+1;m++)
+      if(i>0 &&i<N)
+	{
+	  x_aux[i][0]=x_out[i-1][t_in];
+	  for (Int_t j=1;j<parts;j++)
 	    {
-	       m2=parts*w+m;
-	      E[m2+1]=E[m2]+e*n_0*dx3;
-	      x_axis[m2+1]=x_axis[m2]+dx3;
-     
-	    }
+	      x_aux[i][j]=x_out[i-1][t_in]+ j*(x_out[i][t_in]-x_out[i-1][t_in])/parts;
 	    
-	
+	    }
 
-	 for (int i=0;i<Nparts;i++)
+	}
+      if(i==N)
 	{
-	  // cout<< E[i]<<endl;
-	}
-  */
-  Double_t *E;
-  E=new Double_t[Nparts];
-  Double_t *x_axis;
-  x_axis=new Double_t[Nparts];
-
-  Double_t dx1=length/Nparts;
-  
-  for (Int_t i=0 ;i<Nparts;i++)
-    {
-
-      E[i]=0;
-      x_axis[i]=(i)*length/Nparts;
-  
-    }
-
- Int_t a=0;
-  for (Int_t i=1;i<Nparts;i++)
-    {
-      E[i]=E[i-1]+ e*n_0*dx1;
-      
-       for(Int_t j=0;j<N;j++)
-    	{
+	  x_aux[i][0]=x_out[i-1][t_in];
+	 
+	  for(Int_t j=1;j<parts-1;j++)
+	    {
+	      x_aux[i][j]=x_out[i-1][t_in]+j*(length-x_out[i-1][t_in])/(parts-1);
 	  
-	      if((x_axis[i-1]<=x_out[j][t_in])&&(x_axis[i]>=x_out[j][t_in]))
-		{
-		  if ((i-a)==1)//para evitar incrementações repetitivas
-		    continue;
-		    a=i ;		   
-		E[i]=E[i]-e;  
-		}
-	
+	    }
 	}
-         
     }
+
+  Double_t *E;
+  Double_t *x_axis;
+  E=new Double_t[(N+1)*parts];
+  x_axis=new Double_t[(N+1)*parts];
+  E[0]=0;
+
   
-      //Desenho do gráfico
+  for(Int_t i=0;i<N+1;i++)
+    {
+      if (i>0)
+	E[i*parts]=E[(i-1)*(parts)+parts-1] + e*n_0*(x_aux[i][0]- x_aux[i-1][parts-1])-e;
+
+      for(Int_t j=0;j<parts-1;j++)
+	{
+	
+
+	  E[i*parts+j+1]=E[i*parts+j]+e*n_0*(x_aux[i][j+1]-x_aux[i][j]);
+	  x_axis[i*parts+j]=x_aux[i][j];
+
+    
+	}
+      x_axis[i*parts+parts-1]=x_aux[i][parts-1];
+    }
+
+ 
+    
+     //Desenho do gráfico
       c3->cd(1);
      
 
-      E_gr=new TGraph(Nparts,x_axis,E);
+      E_gr=new TGraph((N+1)*parts,x_axis,E);
   
       auto *axis_1 = E_gr->GetXaxis();
       E_gr->SetMarkerStyle(1); 
-      axis_1->SetLimits(0,length+2);
-      E_gr->Draw();
+      axis_1->SetLimits(25,30+2);
+       E_gr->Draw();
 
 
     
@@ -476,11 +468,12 @@ void root_S2()
   h1[0]->Draw();
 
 
-
+  
   delete E;
-  delete x_axis;
+   delete x_axis;
   delete[] x_out;
   delete[] v_out;
+  delete[] x_aux;
   delete t_out;
   // delete c1;
   // delete c2;
