@@ -1,0 +1,8 @@
+Length=400
+N=400
+Niter=6000
+dt=0.005
+w_p=0.5
+v_th=0.1
+v[N/2][0]=50;
+faz o mesmo que o setup 5 vê a dispersão (w=3k vth^2 + wp^2)e começa a aumentar cada vez mais a amplitude. Se a onde não rebentar, aumenta o w_p poe a amplitude baixa e começa a subir até rebentar, ou seja ficar tudo preto e haver uma disrupção no campo elétrico e na energia.

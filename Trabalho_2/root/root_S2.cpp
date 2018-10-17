@@ -25,7 +25,7 @@ void root_S2()
  
 
   //Variáveis Independentes
-  Double_t w_p=3; //
+  Double_t w_p=0.5; //
   Double_t v_th=0.01;
 
 
@@ -122,7 +122,7 @@ void root_S2()
     
       v[i][0]=v_gauss[i];
       if(i==N/2)
-      	v[i][0]=10;
+      	v[i][0]=50;
 	 
 	file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
