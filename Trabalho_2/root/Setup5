@@ -1,0 +1,7 @@
+length=400
+N=400
+wp=3
+vth=0.01
+v[N/2][0]=10
+
+CALCULA O K A OLHO E VÊ A RELAÇÃO DE DISPERSÃO.

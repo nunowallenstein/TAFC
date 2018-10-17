@@ -2,9 +2,9 @@
 void root_S2()
 {
  
-  static const Double_t length=500;
-  static const Int_t N=300;
-  static const Int_t N_iter=5000;
+  static const Double_t length=400;
+  static const Int_t N=400;
+  static const Int_t N_iter=6000;
   static const Double_t dt =0.005;
 
 
@@ -25,8 +25,8 @@ void root_S2()
  
 
   //Variáveis Independentes
-  Double_t w_p=2.5; //
-  Double_t v_th=1;
+  Double_t w_p=3; //
+  Double_t v_th=0.01;
 
 
   
@@ -52,7 +52,7 @@ void root_S2()
   TGraph *Energy_gr;
   //Histograma
   TH1D *h1[1];
-  h1[0]=new TH1D("h_1","Velocities histogram",1000,-10,10);
+  h1[0]=new TH1D("h_1","Velocities histogram",10000,-10,10);
 
  
   //Canvas
@@ -89,21 +89,21 @@ void root_S2()
   v_gauss=new Double_t[N];
 
   srand(time(NULL));
-  /*
+  
   //Box muller method to a non-unitary variance gaussian distribution http://alpheratz.net/Maple/GaussianDistribution/GaussianDistribution.pdf
    for(Int_t i=0;i<N;i++)
    {
     Double_t aux=((Double_t)rand()/(RAND_MAX));
    v_gauss[i]=v_th*sqrt(-2*log(aux))*cos(2* M_PI*aux);
-  }*/
+  }
 
-    TRandom Gauss;
+  /*  TRandom Gauss;
   for(Int_t i=0;i<N;i++)
     {
        v_gauss[i]=v_th*Gauss.Gaus(0,v_th);
       
     }
-   
+  */
   
   //-----------------------------------------------------------------------------------------------------------------
   //Inicialização
@@ -121,8 +121,8 @@ void root_S2()
       x[i][0]=x_eq[i];
     
       v[i][0]=v_gauss[i];
-      if(i==0)
-	v[i][0]=15;
+      if(i==N/2)
+      	v[i][0]=10;
 	 
 	file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
@@ -501,6 +501,11 @@ void root_S2()
       else  gr[i]->Draw("p1 same");
     }
 
+
+  //-----------------------------------------------------------------------------------------------------------------
+
+
+  
   //-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
