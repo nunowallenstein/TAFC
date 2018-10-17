@@ -1,10 +1,11 @@
 
+
 void root_S2()
 {
  
-  static const Double_t length=500;
-  static const Int_t N=300;
-  static const Int_t N_iter=5000;
+  static const Double_t length=150;
+  static const Int_t N=100;
+  static const Int_t N_iter=20000;
   static const Double_t dt =0.005;
 
 
@@ -16,30 +17,31 @@ void root_S2()
 
    
   // Parametros Físicos
-  //parametros interessantes, m=1,e=1,w_p=3.530,v_th=1
-
-  
-  //Constantes
-  Double_t m=1;
+  /*
+  Double_t m=9.1*pow(10,-31);
+  Double_t n_0=pow(10,11);
+  Double_t e=1.6*pow(10,-19);
+  Double_t w_p=sqrt(4 * M_PI*pow(e,2)*n_0/m);
+  Double_t kB=1.38*pow(10,-23);
+  Double_t T=300;
+  Double_t v_th=sqrt(2*kB*T/m);
+  */
+ Double_t m=4* M_PI;
+  Double_t n_0=1;
   Double_t e=1;
- 
-
-  //Variáveis Independentes
-  Double_t w_p=2.5; //
-  Double_t v_th=1;
-
-
+  Double_t w_p=sqrt(4 * M_PI*pow(e,2)*n_0/m);
+  Double_t kB=1;
+  Double_t T=1;
+  Double_t v_th=sqrt(2*kB*T/m);
   
-  //Variáveis Dependentes
-  Double_t kbT=(pow(v_th,2)*m)/2;
-  Double_t n_0=m*pow(w_p,2)/(4*M_PI*pow(e,2));
-
-  
+  v_th=5;
+  w_p=0.5;
 
 
   //Output Electric Field
-  Int_t parts=300;     //partitions per sheet
-      
+  Int_t parts=100;     //partitions per sheet
+  Int_t t_in=0;       //Iteração do tempo que queremos saber o campo eléctrico
+
 
 
   
@@ -48,24 +50,21 @@ void root_S2()
   
   //Gráficos
   TGraph *gr[N];
-  TGraph *E_gr[10];
-  TGraph *Energy_gr;
+  TGraph *E_gr;
+
   //Histograma
   TH1D *h1[1];
-  h1[0]=new TH1D("h_1","Velocities histogram",1000,-10,10);
+  h1[0]=new TH1D("h_1","Velocities histogram",100,-4,4);
 
  
   //Canvas
   TCanvas *c1 = new TCanvas("c_pos","Positions", 750, 650);
   TCanvas *c2 = new TCanvas("c_Vel","Velocities", 750, 650);
-  TCanvas *c3 = new TCanvas("c_E","Electric Field", 1000, 1000);
-   TCanvas *c3_1 = new TCanvas("c_E_1","Electric Field", 1000, 1000);
-  TCanvas *c4= new TCanvas("c_En","Energy", 750, 650);
+  TCanvas *c3 = new TCanvas("c_E","Electric Field", 750, 650);
+
   c1->Divide(1,1);
   c2->Divide(1,1);
-  c3->Divide(4,1);
-  c3_1->Divide(4,1);
-  c4->Divide(1,1);
+  c3->Divide(1,1);
   //--------------------------------------------------------------------------------------------------------------
   //Declaração da dinâmica
 
@@ -85,25 +84,35 @@ void root_S2()
   //Gaussiana
 
   
+ Double_t mu=0;
+  
+ Double_t gauss;
   Double_t *v_gauss;
   v_gauss=new Double_t[N];
-
-  srand(time(NULL));
   /*
-  //Box muller method to a non-unitary variance gaussian distribution http://alpheratz.net/Maple/GaussianDistribution/GaussianDistribution.pdf
-   for(Int_t i=0;i<N;i++)
-   {
-    Double_t aux=((Double_t)rand()/(RAND_MAX));
-   v_gauss[i]=v_th*sqrt(-2*log(aux))*cos(2* M_PI*aux);
-  }*/
-
-    TRandom Gauss;
   for(Int_t i=0;i<N;i++)
     {
-       v_gauss[i]=v_th*Gauss.Gaus(0,v_th);
-      
+      v_gauss[i]=-5*v_th + i*10*v_th/N; //velocidades no intervalo de [-5vth,5vth]
+      //  cout<< v_gauss[i]<<endl;
+      // cout << "separador"<<endl;
+      // gauss[i]=(1/(sigma*sqrt(2* M_PI)))*exp(((-1/2)*pow(((v_gauss[i]-mu)/sigma),2)));
+      v_gauss[i]=pow((-1),i)*v_th*exp((-1)*pow((v_gauss[i]/v_th),2));
+      // v_gauss[i]=v_gauss[i]*exp((-1)*pow((v_gauss[i]/v_th),2));
+      cout<< v_gauss[i]<<endl;
     }
-   
+*/
+   srand(time(NULL));
+  //Box muller method to a non-unitary variance gaussian distribution http://alpheratz.net/Maple/GaussianDistribution/GaussianDistribution.pdf
+  for(Int_t i=0;i<N;i++)
+    { Double_t aux=((Double_t)rand()/(RAND_MAX));
+      v_gauss[i]=v_th*sqrt(-2*log(aux))*cos(2* M_PI*aux);
+     
+ 
+    }
+
+
+
+
   
   //-----------------------------------------------------------------------------------------------------------------
   //Inicialização
@@ -121,10 +130,8 @@ void root_S2()
       x[i][0]=x_eq[i];
     
       v[i][0]=v_gauss[i];
-      if(i==0)
-	v[i][0]=15;
-	 
-	file << x[i][0]<< " " << v[i][0] << " ";
+ 
+      file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
       if (x[i][0]>length || x[i][0]<0)
 	{
@@ -319,10 +326,13 @@ void root_S2()
   file.close();
 
 
-
-
-
+  //-----------------------------------------------------------------------------------------------------------------
+  //Delete
   
+  delete x_eq;
+  delete[] x;
+  delete[] v;
+
 
   //-----------------------------------------------------------------------------------------------------------------
   //Output
@@ -351,126 +361,89 @@ void root_S2()
   output.close();
   i=0;
 
-
-
-
   //---------------------------------------------------------------------------------------------------------------------------------------
-
   
   //Outro Campo electrico
-  Double_t *E;
-  Double_t *x_axis;
-  E=new Double_t[(N+1)*parts];
-  x_axis=new Double_t[(N+1)*parts];
   
   Double_t **x_aux=new Double_t*[N+1];
   for(Int_t i=0;i<N+1;i++)
     {
       x_aux[i]=new Double_t[parts];       
     }
- 
-  
-  Int_t count=0;
-  for(Int_t t_in=0;t_in<N_iter;t_in=t_in+N_iter/10)
+
+  x_aux[N][parts-1]=length;
+
+  for(Int_t i=0;i<N+1;i++)
     {
-      Double_t **x_aux=new Double_t*[N+1];
-      for(Int_t i=0;i<N+1;i++)
+      if (i==0)
 	{
-	  x_aux[i]=new Double_t[parts];       
-	}
-
-      x_aux[N][parts-1]=length;
-
-      for(Int_t i=0;i<N+1;i++)
-	{
-	  if (i==0)
+	  for(Int_t j=0;j<parts;j++)
 	    {
-	      for(Int_t j=0;j<parts;j++)
-		{
-		  x_aux[i][j]=j*x_out[i][t_in]/(parts);
+	      x_aux[i][j]=j*x_out[i][t_in]/(parts);
 	 
-		}
 	    }
-	  if(i>0 &&i<N)
+	}
+      if(i>0 &&i<N)
+	{
+	  x_aux[i][0]=x_out[i-1][t_in];
+	  for (Int_t j=1;j<parts;j++)
 	    {
-	      x_aux[i][0]=x_out[i-1][t_in];
-	      for (Int_t j=1;j<parts;j++)
-		{
-		  x_aux[i][j]=x_out[i-1][t_in]+ j*(x_out[i][t_in]-x_out[i-1][t_in])/parts;
+	      x_aux[i][j]=x_out[i-1][t_in]+ j*(x_out[i][t_in]-x_out[i-1][t_in])/parts;
 	    
-		}
-
 	    }
-	  if(i==N)
-	    {
-	      x_aux[i][0]=x_out[i-1][t_in];
+
+	}
+      if(i==N)
+	{
+	  x_aux[i][0]=x_out[i-1][t_in];
 	 
-	      for(Int_t j=1;j<parts-1;j++)
-		{
-		  x_aux[i][j]=x_out[i-1][t_in]+j*(length-x_out[i-1][t_in])/(parts-1);
+	  for(Int_t j=1;j<parts-1;j++)
+	    {
+	      x_aux[i][j]=x_out[i-1][t_in]+j*(length-x_out[i-1][t_in])/(parts-1);
 	  
-		}
 	    }
 	}
+    }
 
-      Double_t *E;
-      Double_t *x_axis;
-      E=new Double_t[(N+1)*parts];
-      x_axis=new Double_t[(N+1)*parts];
-      E[0]=0;
+  Double_t *E;
+  Double_t *x_axis;
+  E=new Double_t[(N+1)*parts];
+  x_axis=new Double_t[(N+1)*parts];
+  E[0]=0;
 
   
-      for(Int_t i=0;i<N+1;i++)
-	{
-	  if (i>0)
-	    E[i*parts]=E[(i-1)*(parts)+parts-1] + e*n_0*(x_aux[i][0]- x_aux[i-1][parts-1])-e;
+  for(Int_t i=0;i<N+1;i++)
+    {
+      if (i>0)
+	E[i*parts]=E[(i-1)*(parts)+parts-1] + e*n_0*(x_aux[i][0]- x_aux[i-1][parts-1])-e;
 
-	  for(Int_t j=0;j<parts-1;j++)
-	    {
+      for(Int_t j=0;j<parts-1;j++)
+	{
 	
 
-	      E[i*parts+j+1]=E[i*parts+j]+e*n_0*(x_aux[i][j+1]-x_aux[i][j]);
-	      x_axis[i*parts+j]=x_aux[i][j];
+	  E[i*parts+j+1]=E[i*parts+j]+e*n_0*(x_aux[i][j+1]-x_aux[i][j]);
+	  x_axis[i*parts+j]=x_aux[i][j];
 
-	     
-	    }
-	  x_axis[i*parts+parts-1]=x_aux[i][parts-1];
-	}
-
-      c3->SetRightMargin(0.09);
-      c3->SetLeftMargin(0.15);
-      c3->SetBottomMargin(0.15);
-
- 
-      c3_1->SetRightMargin(0.09);
-      c3_1->SetLeftMargin(0.15);
-      c3_1->SetBottomMargin(0.15);
-      //Desenho do gráfico
-      if (count<4)
-      c3->cd(count+1);
-
-      if (count>=4)
-	c3_1->cd(count-3);
-
- 
-      E_gr[count]=new TGraph((N+1)*parts,x_axis,E);
-      E_gr[count]->SetMarkerStyle(1);
-  
- 
-      E_gr[count]->SetTitle(Form("Electric field/position at time t= %g",t_in*dt));
-      E_gr[count]->GetXaxis()->SetTitle("Position [L]");
     
-      // E_gr[count]->GetXaxis()->SetLabelSize(12.5);
-      E_gr[count]->GetYaxis()->SetTitle("Energy [M V^{2}]");
-      // E_gr[count]->GetYaxis()->SetLabelSize(12.5);
-      E_gr[count]->GetYaxis()->SetTitleOffset(1);
-      auto *axis_1 = E_gr[count]->GetXaxis();
-      axis_1->SetLimits(0,length);
-      E_gr[count]->Draw();
-      count++;
+	}
+      x_axis[i*parts+parts-1]=x_aux[i][parts-1];
     }
 
  
+    
+     //Desenho do gráfico
+      c3->cd(1);
+     
+
+      E_gr=new TGraph((N+1)*parts,x_axis,E);
+  
+      auto *axis_1 = E_gr->GetXaxis();
+      E_gr->SetMarkerStyle(1); 
+      axis_1->SetLimits(25,30+2);
+       E_gr->Draw();
+
+
+    
   
 	
   //----------------------------------------------------------------------------------------------------------------------------------------
@@ -491,89 +464,35 @@ void root_S2()
 	gr[i]->GetHistogram()->SetMinimum(-10);  //   Y     
       */
       
-      if (i==0)
-	{
-	  gr[i]->Draw("ap");
-	  gr[i]->SetTitle("Position of the sheets along time");
-	  gr[i]->GetXaxis()->SetTitle("Position [L]");
-	  gr[i]->GetYaxis()->SetTitle("Time [t]");
-	}
-      else  gr[i]->Draw("p1 same");
+       if (i==0) gr[i]->Draw("ap");
+       else  gr[i]->Draw("p1 same");
     }
 
   //-----------------------------------------------------------------------------------------------------------------
   //Integração trapézio
   Double_t *Int_V;
   Int_V=new Double_t[N];
-  Double_t Int_V_aux;
   for (Int_t i=0;i<N;i++)
     {
-      Int_V_aux=0;
       for(Int_t j=0;j<N_iter;j++)
 	{
-	  Int_V_aux+=(v_out[i][j+1]+v_out[i][j]);
+	  Int_V[i]+=v_out[i][j]*dt+(v_out[i][j+1]-v_out[i][j])*dt/2;
 	}
-      Int_V_aux=(Int_V_aux/(2*N_iter));
-      Int_V[i]=Int_V_aux;
+      Int_V[i]=Int_V[i]/(N_iter*dt);
       h1[0]->Fill(Int_V[i]);
-      h1[0]->GetYaxis()->SetTitle("Counts");
-      // h1[0]->GetXaxis()->SetTitle("Velocity [L t^(-1)]");
-       h1[0]->GetXaxis()->SetTitle("Velocity [L t^{-1}]");
-
-      c2->cd(1);
-      h1[0]->Draw();
-	
     }
 
-  //----------------------------------------------------------------------------------------------------------------
-   //Energia
-   c4->cd(1);
-  Double_t *Energy;
-  Double_t Energy_aux;
-  Energy=new Double_t[N_iter];
-  
-  
-    for(Int_t i=0;i<N_iter;i++)
-      {
-	Energy_aux=0;
-	for(Int_t j=0;j<N;j++)
-	  {
-	    Double_t dx=x_out[j][i]-x_eq[j];
-	    Energy_aux=Energy_aux+m*(pow(v_out[j][i],2))+(pow(w_p,2))*m*(pow(dx,2));        
-	  }
-	Energy[i]=Energy_aux/2;
-      }
+  c2->cd(1);
+  h1[0]->Draw();
 
-   c4->SetRightMargin(0.09);
-      c4->SetLeftMargin(0.15);
-      c4->SetBottomMargin(0.15);
-      
-    
-    Energy_gr=new TGraph(N_iter,t_out,Energy);
- auto *axis2 = Energy_gr->GetXaxis();
- axis2->SetLimits(0,N_iter*dt);
-   
-  Energy_gr->SetTitle("Energy/Time");
-  Energy_gr->GetXaxis()->SetTitle("Time [t]");
-  Energy_gr->GetYaxis()->SetTitle("Energy [M V^2]");
-  Energy_gr->SetMarkerStyle(1);
-   
 
-  Energy_gr->Draw();
-
-    //-----------------------------------------------------------------------------------------------------------------
-  //Delete
   
-   delete Energy;
   delete E;
-  delete x_axis;
+   delete x_axis;
   delete[] x_out;
   delete[] v_out;
   delete[] x_aux;
   delete t_out;
-  delete x_eq;
-  delete[] x;
-  delete[] v;
   // delete c1;
   // delete c2;
   // delete h1[1];
