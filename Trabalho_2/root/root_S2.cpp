@@ -3,9 +3,9 @@
 void root_S2()
 {
  
-  static const Double_t length=30;
-  static const Int_t N=40;
-  static const Int_t N_iter=10000;
+  static const Double_t length=150;
+  static const Int_t N=100;
+  static const Int_t N_iter=20000;
   static const Double_t dt =0.005;
 
 
@@ -16,16 +16,26 @@ void root_S2()
 
 
    
-  // Parametros
-  Double_t m=4* M_PI;
+  // Parametros Físicos
+  /*
+  Double_t m=9.1*pow(10,-31);
+  Double_t n_0=pow(10,11);
+  Double_t e=1.6*pow(10,-19);
+  Double_t w_p=sqrt(4 * M_PI*pow(e,2)*n_0/m);
+  Double_t kB=1.38*pow(10,-23);
+  Double_t T=300;
+  Double_t v_th=sqrt(2*kB*T/m);
+  */
+ Double_t m=4* M_PI;
   Double_t n_0=1;
   Double_t e=1;
   Double_t w_p=sqrt(4 * M_PI*pow(e,2)*n_0/m);
-
+  Double_t kB=1;
+  Double_t T=1;
+  Double_t v_th=sqrt(2*kB*T/m);
   
-  Double_t x_i=1;
-  Double_t v_i=0; //v_i em unidades de vthermal
-
+  v_th=5;
+  w_p=0.5;
 
 
   //Output Electric Field
@@ -44,7 +54,7 @@ void root_S2()
 
   //Histograma
   TH1D *h1[1];
-  h1[0]=new TH1D("h_1","Velocities histogram",1000,-3,3);
+  h1[0]=new TH1D("h_1","Velocities histogram",100,-4,4);
 
  
   //Canvas
@@ -56,7 +66,7 @@ void root_S2()
   c2->Divide(1,1);
   c3->Divide(1,1);
   //--------------------------------------------------------------------------------------------------------------
-  //Declaração dos parametros
+  //Declaração da dinâmica
 
   //Pos Equilibrio
   Double_t *x_eq;
@@ -72,29 +82,38 @@ void root_S2()
 
   //----------------------------------------------------------------------------------------------------------------
   //Gaussiana
-  Double_t sigma=1;
+
+  
  Double_t mu=0;
   
-  Double_t *gauss;
-  gauss=new Double_t[N];
+ Double_t gauss;
   Double_t *v_gauss;
   v_gauss=new Double_t[N];
-  // cout <<"------------ORDENADO-------------"<<endl;
+  /*
   for(Int_t i=0;i<N;i++)
     {
-     v_gauss[i]=i*length/N;
+      v_gauss[i]=-5*v_th + i*10*v_th/N; //velocidades no intervalo de [-5vth,5vth]
+      //  cout<< v_gauss[i]<<endl;
+      // cout << "separador"<<endl;
+      // gauss[i]=(1/(sigma*sqrt(2* M_PI)))*exp(((-1/2)*pow(((v_gauss[i]-mu)/sigma),2)));
+      v_gauss[i]=pow((-1),i)*v_th*exp((-1)*pow((v_gauss[i]/v_th),2));
+
+      // v_gauss[i]=v_gauss[i]*exp((-1)*pow((v_gauss[i]/v_th),2));
+      cout<< v_gauss[i]<<endl;
+    }
+*/
+   srand(time(NULL));
+  //Box muller method to a non-unitary variance gaussian distribution http://alpheratz.net/Maple/GaussianDistribution/GaussianDistribution.pdf
+  for(Int_t i=0;i<N;i++)
+    { Double_t aux=((Double_t)rand()/(RAND_MAX));
+      v_gauss[i]=v_th*sqrt(-2*log(aux))*cos(2* M_PI*aux);
      
-     gauss[i]=(1/(sigma*sqrt(2* M_PI)))*exp(((-1/2)*pow(((v_gauss[i]-mu)/sigma),2)));
-     //cout << exp(pow(v_gauss[i],2))<<endl;
-     //   cout << v_gauss[i]<< endl;
+ 
     }
-  //  cout <<"------------DESORDENADO-------------"<<endl;
-  // random_shuffle(&gauss[0],&gauss[N-1]);
-    for(Int_t i=0;i<N;i++)
-    {
-   
-      // cout << gauss[i]<<endl;
-    }
+
+
+
+
   
   //-----------------------------------------------------------------------------------------------------------------
   //Inicialização
@@ -110,8 +129,8 @@ void root_S2()
       // x[i][0]=x_eq[i]+0.5*pow((+1),i);
       
       x[i][0]=x_eq[i];
-      if(i==0)
-      v[i][0]=0;
+    
+      v[i][0]=v_gauss[i];
  
       file << x[i][0]<< " " << v[i][0] << " ";
       //Caso as posições iniciais não estejam na caixa
