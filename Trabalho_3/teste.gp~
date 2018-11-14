@@ -1,0 +1,9 @@
+set terminal gif animate
+set output 'foobar.gif'
+stats 'gif.dat' nooutput
+set xrange [-1:1]
+set yrange [0:1.5]
+
+do for [i=1:int(STATS_blocks)] {
+    plot 'gif.dat' index (i-1) using 1:2 with lines
+}

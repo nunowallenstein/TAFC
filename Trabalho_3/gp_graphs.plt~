@@ -1,0 +1,22 @@
+
+#set zrange[0:1]
+set title "Gráfico da onda na equação de Maxwell"
+set xlabel "Position"
+set ylabel "Time"
+set zlabel "Psi"
+set ticslevel 0
+#gráfico a plotar
+
+set view 11,68,1,1
+splot 'Output_psi.dat' matrix nonuniform with dots notitle
+set term pdf
+set output "images/right.pdf"
+replot
+#set view 11,311,1,1
+#set output "/images/right.pdf"
+#replot
+
+
+
+#set term x11	
+pause -1 "Hit return to exit"

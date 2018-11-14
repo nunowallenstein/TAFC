@@ -1,0 +1,160 @@
+#include <iostream>
+#include <stdlib.h>
+#include <math.h>
+#include <fstream>
+#include "S3_onda.h"
+
+
+int main()
+{
+  //lambda
+  double lam=0;
+  
+  
+  
+  int N_x=251;
+  int N_t=50001;
+
+
+  double x_inf=-1;
+  double x_sup=1;
+  double sigma=0.13;
+  double t_f=10;
+  
+  double dx=(x_sup-x_inf)/(N_x-1);
+  double dt=t_f/(N_t-1);
+  cout << dt/dx<< endl;
+  
+   double x_0=(x_sup+x_inf)/2;//como valor padrão tomo a média do intervalo
+
+  
+  // Variáveis
+  double *x;//posição
+  double *t;//tempo
+  double *psi;//psi
+  double *phi=new double [N_x];
+  double *pi=new double [N_x];
+
+
+  
+  //Condições fronteira,3 opções, "reflectoras", "none" ou "periodicas "
+  string Bconditions="reflectoras";
+  
+  //Especificamente para condições fronteira reflectoras
+  double kR0=1;
+  double  kR1=1;
+   
+  //escrita para ficheiros
+  ofstream Opsi;
+  ofstream Ophi;
+  ofstream Opi;
+  ofstream gif;
+  ofstream time;
+
+
+  //abertura
+  Opsi.open("Output_psi.dat");
+  Ophi.open("Output_phi.dat");
+  Opi.open("Output_pi.dat");
+  gif.open("gif.dat");
+  time.open("time.dat");
+
+  
+  //criação dos eixos
+  create_grid(x,N_x,x_inf,x_sup);
+  create_grid(t,N_t,0,t_f);
+
+
+  
+
+  
+  Opsi<<N_t<<" ";
+  Ophi<<N_t<<" ";
+  Opi<<N_t<<" ";
+
+  //Escrita do eixo x
+  write_file(Opsi, x, N_x);
+  write_file(Ophi, x, N_x);
+  write_file(Opi, x, N_x);
+
+
+ 
+  Opsi<<t[0]<<" ";
+  Ophi<<t[0]<<" ";
+  Opi<<t[0]<<" ";
+
+
+  //Inicialização de psi
+  psi0(x,psi,N_x,sigma,x_0);
+     
+    
+
+
+ 
+
+  // Inicialização de phi e pi por diferenças 2ª ordem
+  phi=diffs_2nd_order(psi,N_x,dx,1,"none");
+  pi=array_multiply(phi,lam,N_x);
+    
+
+   write_file(Opsi,psi,N_x);
+  write_file(Ophi,phi,N_x);
+  write_file(Opi,pi,N_x);
+
+  for(int i=0;i<N_x;i++)
+    {
+      gif << x[i] << " " <<psi[i]<<"\n";
+    }
+  gif<< "\n\n";
+
+  
+  
+  int periodo_impressao=75; //esta variavel controla a frequencia com que são mandados valores para o output, em cada "periodo_impressao" iterações temporais, um ponto para o output é gerado
+
+  
+  for(int i=1;i<N_t;i++)
+    {
+     
+      if(i%periodo_impressao==0)
+	{
+	  Opsi<<t[i]<<" ";
+	  Ophi<<t[i]<<" ";
+	  Opi<<t[i]<<" ";
+	  time << t[i] << endl;
+	}
+
+      
+      //função runge_kutta (variavel de estado 1, variavel de estado 2, função de onda, número de pontos, espaçamento dt, espaçamento dx, condição fronteira, indice de reflexão_0, indice de reflexão_1)
+      	  
+      runge_kutta(phi,pi,psi,N_x,dt,dx,Bconditions,kR0,kR1);
+      if(i%periodo_impressao==0)
+	{	  
+	  write_file(Ophi,phi,N_x);
+	  write_file(Opi,pi,N_x);  
+	  write_file(Opsi,psi,N_x);
+	  for(int j=0;j<N_x;j++)
+	    {
+	      gif << x[j] << " " <<psi[j]<<"\n";
+	     
+	    }
+	  gif<< "\n\n";
+	}
+    }
+
+  //Fecho e desalocação de memória
+  time.close();
+  gif.close ();
+  Opsi.close();
+  Ophi.close();
+  Opi.close();
+
+
+  
+  delete x;
+  delete psi;
+  delete pi;
+  delete phi;
+  delete t;
+  
+  return 0;
+}

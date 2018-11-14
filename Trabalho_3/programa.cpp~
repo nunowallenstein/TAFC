@@ -1,0 +1,118 @@
+#include <iostream>
+#include <stdlib.h>
+#include <math.h>
+#include <fstream>
+#include "programa.h"
+
+
+int main()
+{
+  //lambda
+  int lam=0;
+  
+  
+  //Parametros numéricos
+  int N_x=300;
+  int N_t=300;
+  
+  double x_sup=10;
+  double x_inf=-10;
+  double sigma=1;
+  double t_f=5;
+  
+  double dx=(x_sup-x_inf)/N_x;
+  double dt=t_f/N_t;
+  double x_eq=(x_sup+x_inf)/2;//predifinido como a média do intervalo
+
+
+  // Variáveis
+   double *x;//posição
+   double *t;//tempo
+   double *psi;//psi
+   double *l=new double [N_x];//left
+   double *r=new double [N_x];//right
+ 
+    //escrita para ficheiros
+    ofstream Opsi;
+    ofstream Oleft;
+    ofstream Oright;
+    Opsi.open("Output_psi.dat");
+    Oleft.open("Output_left.dat");
+    Oright.open("Output_right.dat");
+
+    //criação dos eixos
+    create_grid(x,N_x,x_inf,x_sup);
+    create_grid(t,N_t,0,t_f);
+
+    Opsi<<N_t<<" ";
+    Oleft<<N_t<<" ";
+    Oright<<N_t<<" ";
+
+    write_file(Opsi, x, N_x);
+    write_file(Oleft, x, N_x);
+    write_file(Oright, x, N_x);
+	
+    Opsi<<t[0]<<" ";
+    Oleft<<t[0]<<" ";
+    Oright<<t[0]<<" ";
+    
+    psi0(x,psi,N_x,sigma,x_eq);
+    write_file(Opsi,psi,N_x);
+    
+  // Diferenças 2ª ordem
+     double *psi_1st=diffs_1st_order(psi,N_x,dx,1);
+  
+
+
+  //usando como variáveis left e right e inicializando-as
+ 
+  //iteração 0
+     // double *T1=new double [N_x];
+     // double *T2=new double [N_x];
+     //  double *T3=new double [N_x];
+
+ 
+  for(int i=0;i<N_x;i++)
+    {
+       l[i]=(1.0+lam)*0.5*psi_1st[i];
+       r[i]=(1.0-lam)*0.5*psi_1st[i];
+    
+       //  T1[i]=1;
+       // T2[i]=1;
+    }
+  write_file(Oleft,l,N_x);
+  write_file(Oright,r,N_x);
+ 
+  //iterações restantes
+  for(int i=1;i<N_t;i++)
+    {
+      Opsi<<t[i]<<" ";
+      Oleft<<t[i]<<" ";
+      Oright<<t[i]<<" ";
+    
+      runge_kutta(l,l,N_x,dt,dx);
+      runge_kutta(r,array_multiply(r,N_x,-1),N_x,dt,dx);
+      runge_kutta2(psi,l,r,N_x,dt);
+
+      write_file(Oleft,l,N_x);
+      write_file(Oright,r,N_x);
+      write_file(Opsi,psi,N_x);
+    }
+
+  Opsi.close();
+  Oleft.close();
+  Oright.close();
+  
+  delete x;
+  delete psi_1st;
+  delete psi;
+  delete r;
+  delete l;
+  // delete T1;
+  // delete T2;
+  // delete T3;
+     
+
+  
+  return 0;
+}

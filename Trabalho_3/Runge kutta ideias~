@@ -1,0 +1,210 @@
+//MÉTODO EXTRAPOLATIVO COM EULER DE PASSOS DE H/2
+
+void runge_kutta(double *phi,double *pi,double *psi,int N_x, double dt, double dx, string Bconditions,double kR0,double kR1)
+{  
+  double **k1=new double *[3];
+  double **k2=new double *[3];
+  double **k3=new double *[3];
+  double **k4=new double *[3];
+
+
+  for(int i=0;i<3;i++)
+    {
+      k1[i]=new double [N_x];
+      k2[i]=new double [N_x];
+      k3[i]=new double [N_x];
+      k4[i]=new double [N_x];
+    }
+
+
+
+ if(Bconditions!="reflectoras")
+    {
+      //phi
+      //d/dx em pi(n)
+      k1[0]=diffs_1st_order(pi,N_x,dx,dt,Bconditions);
+
+      
+      //Euler para phi para o ponto n+1/2
+      k2[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      //k3=k2
+      k3[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      //Euler para phi para o ponto n+1
+      
+      k4[0]=diffs_1st_order(array_sum(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),array_multiply(k3[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      
+      /*
+      k2[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      k3[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      k4[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],1,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      */
+
+
+      //pi
+      k1[1]=diffs_1st_order(phi,N_x,dx,dt,Bconditions);
+      
+      //Euler para pi o ponto n+h/2
+      k2[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      //k3=k2
+      k3[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      //Euler para pi para o  ponto (n+1/2)+1/2
+      
+      k4[1]=diffs_1st_order(array_sum(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),array_multiply(k3[1],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      /*
+      
+      k2[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      k3[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      k4[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],1,N_x),N_x),N_x,dx,0.5*dt,Bconditions);
+      */
+   
+    }
+  
+
+  if(Bconditions=="reflectoras")
+    {
+      //phi
+      k1[0]=diffs_reflect(pi,phi,N_x,dx,dt,kR0,kR1);   
+ 
+      //pi      
+      k1[1]=diffs_reflect(phi,pi,N_x,dx,dt,-kR0,-kR1);
+    }
+
+
+  //psi
+  for(int i=0;i<N_x;i++)
+    {
+  
+      k1[2][i]=pi[i]*dt;
+      k2[2][i]=(pi[i]+0.5*k1[1][i])*dt;
+      k3[2][i]=(pi[i]+0.5*k1[1][i])*dt;
+      k4[2][i]=((pi[i]+0.5*k1[1][i])+0.5*k2[1][i])*dt;
+
+      
+      
+    }
+
+
+
+  for(int i=0;i<N_x;i++)
+    {
+      psi[i]=psi[i]+(1.0/6)*(k1[2][i]+2*k2[2][i]+2*k3[2][i]+k4[2][i]);
+      pi[i]=pi[i]+(1.0/6)*(k1[1][i]+2*k2[1][i]+2*k3[1][i]+k4[1][i]);
+      phi[i]=phi[i]+(1.0/6)*(k1[0][i]+2*k2[0][i]+2*k3[0][i]+k4[0][i]);
+    }
+
+
+
+
+  for(int i=0;i<3;i++)
+    {
+      delete k1[i];
+      delete k2[i];
+      delete k3[i];
+      delete k4[i];
+    }
+  delete k1;
+  delete k2;
+  delete k3;
+  delete k4;
+
+
+}
+
+
+
+
+//MÉTODO EXTRAPOLATIVO COM EULER A PARTIR DO PONTO TEMPORAL DA ITERAÇÃO
+
+void runge_kutta(double *phi,double *pi,double *psi,int N_x, double dt, double dx, string Bconditions,double kR0,double kR1)
+{  
+  double **k1=new double *[3];
+  double **k2=new double *[3];
+  double **k3=new double *[3];
+  double **k4=new double *[3];
+
+
+  for(int i=0;i<3;i++)
+    {
+      k1[i]=new double [N_x];
+      k2[i]=new double [N_x];
+      k3[i]=new double [N_x];
+      k4[i]=new double [N_x];
+    }
+
+
+
+ if(Bconditions!="reflectoras")
+    {
+      //phi
+      //d/dx em pi(n)
+      k1[0]=diffs_1st_order(pi,N_x,dx,dt,Bconditions);
+
+      
+      //Euler para phi para o ponto n+1/2
+      k2[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+   
+      
+      k2[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      k3[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      k4[0]=diffs_1st_order(array_sum(pi,array_multiply(k1[0],1,N_x),N_x),N_x,dx,dt,Bconditions);
+      
+
+
+      //pi
+      k1[1]=diffs_1st_order(phi,N_x,dx,dt,Bconditions);
+      
+      k2[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      k3[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],0.5,N_x),N_x),N_x,dx,dt,Bconditions);
+      k4[1]=diffs_1st_order(array_sum(phi,array_multiply(k1[1],1,N_x),N_x),N_x,dx,dt,Bconditions);
+     
+   
+    }
+  
+
+  if(Bconditions=="reflectoras")
+    {
+      //phi
+      k1[0]=diffs_reflect(pi,phi,N_x,dx,dt,kR0,kR1);   
+ 
+      //pi      
+      k1[1]=diffs_reflect(phi,pi,N_x,dx,dt,-kR0,-kR1);
+    }
+
+
+  //psi
+  for(int i=0;i<N_x;i++)
+    {
+  
+      k1[2][i]=pi[i]*dt;
+      k2[2][i]=(pi[i]+0.5*k1[1][i])*dt;
+      k3[2][i]=(pi[i]+0.5*k1[1][i])*dt;
+      k4[2][i]=((pi[i]+k1[1][i])*dt;
+    
+    }
+
+
+
+  for(int i=0;i<N_x;i++)
+    {
+      psi[i]=psi[i]+(1.0/6)*(k1[2][i]+2*k2[2][i]+2*k3[2][i]+k4[2][i]);
+      pi[i]=pi[i]+(1.0/6)*(k1[1][i]+2*k2[1][i]+2*k3[1][i]+k4[1][i]);
+      phi[i]=phi[i]+(1.0/6)*(k1[0][i]+2*k2[0][i]+2*k3[0][i]+k4[0][i]);
+    }
+
+
+
+
+  for(int i=0;i<3;i++)
+    {
+      delete k1[i];
+      delete k2[i];
+      delete k3[i];
+      delete k4[i];
+    }
+  delete k1;
+  delete k2;
+  delete k3;
+  delete k4;
+
+
+}
