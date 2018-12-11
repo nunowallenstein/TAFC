@@ -1,0 +1,17 @@
+Estes programas foram feitos em python2.7 e ROOT 6.15
+
+Aplica-se primeiro um rescalling das features usando o standardscaler da scikit learn
+Executar:
+python preprocessing.py
+
+Este programa retorna dois ficheiros proctrain.csv e proctest.csv que irão ser lidos pelo os dois programas seguintes que executam o TMVA do ROOT com os métodos Fisher e BDTG  ( Gradient Boosted Decision Tree)
+
+python S6_tafc_75494_bdt.py
+python S6_tafc_75494_bdt.py
+
+Estes ficheiros dao como output todos os ficheiros.root necessários para a visualização dos dados.
+
+teste.root-contém as curvas AMS relativas ao treino
+tmvatest.root-a distribuição classificações individuais para cada feature
+submission.csv - o ficheiro para submeter no kaggle
+os restantes ficheiros root são para visualizar as variáveis em cada zona da data, ou de teste ou de treino,assim como o score do algoritmo e a sua distribuição.
