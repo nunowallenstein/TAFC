@@ -1,0 +1,37 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+\documentclass[letterpaper,11pt]{article}
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{mathpazo} % Use the Palatino font by default
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{mathtools}
+%\usepackage[backend=bibtex,style=authoryear,natbib=true]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
+\usepackage[backend=bibtex,style=numeric,natbib=true]{biblatex} % Use the bibtex backend with the number citation style
+
+\addbibresource{example.bib} % The filename of the bibliography
+
+\usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
+
+\defbibheading{secbib}[References]{%
+  \section*{#1}%
+  \markboth{#1}{#1}}
+
+
+\usepackage[affil-it]{authblk}
+
+
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\title{Spring mass walking model}
+\author{Nuno Teixeira - 75494}
+\affil{Instituto Superior Técnico -Tópicos Avançados de Física Computacional}
+\date{\today}
+\maketitle

@@ -1,0 +1,22 @@
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+
+The second law of thermodynamics can be proved from the mechanical theory if one assumes that the present state of the universe, or at least that part which surrounds us, started to evolve from an improbable state and is still in a relatively improbable state. This is a reasonable assumption to make, since it enables us to explain the facts of experience, and one should not expect to be able to deduce it from anything more fundamental \cite{Boltzmann1872,Boltzmann1895}.
+
+%-----------------------------------
+%	SUBSECTION 1
+%-----------------------------------
+\subsection{A subsection}
+
+The applicability of probability theory to physical situations, cannot by rigorously proved, but the fact that one never observes those events that theoretically should be quite rare is certainly not a valid argument against the theory.
+
+%-----------------------------------
+%	SUBSECTION 2
+%-----------------------------------
+
+\subsection{Another subsection}
+One may speculate that the universe as a whole is in thermal equilibrium and therefore dead, but there will be local deviations from equilibrium which may last for the relatively short time of a few eons. For the universe as a whole, there is no distinction between the " backwards " and " forwards " directions of time, but for the worlds on which living beings exist, and which are therefore in relatively improbable states, the direction of time will be determined by the direction of increasing entropy, proceeding from less to more probable states.

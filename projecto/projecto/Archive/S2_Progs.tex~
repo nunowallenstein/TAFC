@@ -1,0 +1,16 @@
+\section{Programs and Aquirement of information}
+In this section I explain how the programs that I developed work.
+
+
+\verbatim{2legs.nb}
+In this mathematica code, I pick a set of parameters and initial conditions to apply into the Runge-Kutta method to evaluate a simulation of the center of mass. Using the Manipulate method, it is possible to view an animation of the movement as well as to access the trajectory using the graphics.
+
+\verbatim{2legsptsfixos.nb}
+In this program I obtain a table which is the result of a scan of 3 parameters: energy, angle of atack and initial position regarding a successful 2 stride simulation. In this table, besides this 3 parameters information, other important measures are required to obtain the fixed points such as $y_1$, $y_2$, $x_1$, $x_2$ which are the positions of the CoM at Vertical Leg Orientation at the first and second stride as well it's respective velocities to calculate the Jacobian matrix according to Eq. (\ref{eigeneq}). To know the precise location and velocity of the Center of Mass at Vertical Leg Orientation an interpolation of third order is applied from each Runge-Kutta point so that we can precisely access each value at the horizontal position of the toe.
+
+
+\verbatim{leitura.nb}
+In this program I filter all the successful 2 stride configurations by requiring that $\Delta x_1$, $\Delta x_2$, $\Delta y_1$ and $\Delta y_2 < 0.001$. This gives me access to the index of the fixed point. From this list i calculate the associated eigenvalues of the jacobian matrix and determine if they are unstable or stable
+
+\verbatim{2legs_avail.nb}
+In this program I explore and build a table with the successful 2 stride configuration points the limits of the maximum step number that configuration is associated with. If that configuration succeeds, I continue to iterate the maximum step until 10, otherwise I associate to that configuration a maximum step number of $maxsteps-1$
